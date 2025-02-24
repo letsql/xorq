@@ -134,7 +134,7 @@ pywin32==308 ; platform_python_implementation != 'PyPy' and sys_platform == 'win
 pyyaml==6.0.2
 pyzmq==26.2.1
 quartodoc==0.9.1
-quickgrove==0.1.2
+quickgrove==0.1.4
 referencing==0.36.2
 requests==2.32.3
 requests-oauthlib==2.0.0 ; python_full_version < '4.0'

@@ -1,3 +1,0 @@
-# API Reference
-
-The Backend and Expression API are built on top of Ibis; here, we reproduce only the methods and functions implemented by LETSQL.

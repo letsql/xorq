@@ -1,0 +1,63 @@
+---
+title: ML Functions
+---
+
+# train_test_splits
+
+```python
+train_test_splits(
+    table,
+    unique_key,
+    test_sizes,
+    num_buckets=10000,
+    random_seed=None,
+)
+```
+
+Generates multiple train/test splits of an Ibis table for different test
+sizes.
+
+This function splits an Ibis table into multiple subsets based on a
+unique key or combination of keys and a list of test sizes. It uses a
+hashing function to convert the unique key into an integer, then applies
+a modulo operation to split the data into buckets. Each subset of data
+is defined by a range of buckets determined by the cumulative sum of the
+test sizes.
+
+#### Parameters
+
+| Name        | Type                                                                                         | Description                                                                                                                                                                                                                                                                                                                                                          | Default    |
+|---|--------------|-----------------------------------------------------|---|
+| table       | [ir](%60letsql.vendor.ibis.expr.types%60).[Table](%60letsql.vendor.ibis.expr.types.Table%60) | The input Ibis table to be split.                                                                                                                                                                                                                                                                                                                                    | *required* |
+| unique_key  | [str](%60str%60) \| [list](%60list%60)\[[str](%60str%60)\]                                   | The column name(s) that uniquely identify each row in the table. This unique_key is used to create a deterministic split of the dataset through a hashing process.                                                                                                                                                                                                   | *required* |
+| test_sizes  | [Iterable](%60typing.Iterable%60)\[[float](%60float%60)\] \| [float](%60float%60)            | An iterable of floats representing the desired proportions for data splits. Each value should be between 0 and 1, and their sum must equal 1. The order of test sizes determines the order of the generated subsets. If float is passed it assumes that the value is for the test size and that a tradition tain test split of (1-test_size, test_size) is returned. | *required* |
+| num_buckets | [int](%60int%60)                                                                             | The number of buckets into which the data can be binned after being hashed (default is 10000). It controls how finely the data is divided during the split process. Adjusting num_buckets can affect the granularity and efficiency of the splitting operation, balancing between accuracy and computational efficiency.                                             | `10000`    |
+| random_seed | [int](%60int%60) \| None                                                                     | Seed for the random number generator. If provided, ensures reproducibility of the split (default is None).                                                                                                                                                                                                                                                           | `None`     |
+
+#### Returns
+
+| Name | Type                                                                                                                              | Description                                                                                                                                         |
+|---|-------------------------------|--------------------------------------|
+|      | [Iterator](%60typing.Iterator%60)\[[ir](%60letsql.vendor.ibis.expr.types%60).[Table](%60letsql.vendor.ibis.expr.types.Table%60)\] | An iterator yielding Ibis table expressions, each representing a mutually exclusive subset of the original table based on the specified test sizes. |
+
+#### Raises
+
+| Name | Type                           | Description                                                                                                                                |
+|-----|------------|--------------------------------------------------------|
+|      | [ValueError](%60ValueError%60) | If any value in `test_sizes` is not between 0 and 1. If `test_sizes` does not sum to 1. If `num_buckets` is not an integer greater than 1. |
+
+#### Examples
+
+```python
+>>> import letsql as ls
+>>> table = ls.memtable({"key": range(100), "value": range(100,200)})
+>>> unique_key = "key"
+>>> test_sizes = [0.2, 0.3, 0.5]
+>>> splits = ls.train_test_splits(table, unique_key, test_sizes, num_buckets=10, random_seed=42)
+>>> for i, split_table in enumerate(splits):
+...     print(f"Split {i+1} size: {split_table.count().execute()}")
+...     print(split_table.execute())
+Split 1 size: 20
+Split 2 size: 30
+Split 3 size: 50
+```

@@ -1,0 +1,216 @@
+---
+title: '10-minute tour of xorq'
+---
+
+This tutorial will walk you through the key features of xorq, a data processing library that enables you to work seamlessly across multiple data engines.
+
+## Installation
+
+First, install xorq using pip. We'll include the `duckdb` extra to enable the duckdb backend:
+
+```bash
+pip install 'xorq[duckdb]'
+```
+
+## Setting up Connections
+
+Let's start by creating connections to different backends:
+
+```python
+import xorq as xo
+from xorq import _  # import the underscore accessor for column reference
+
+# Create connections to different backends
+con = xo.connect()  # xorq's main connection
+ddb = xo.duckdb.connect()  # DuckDB connection
+pg = xo.postgres.connect_examples()  # Postgres connection
+```
+
+In this section, we:
+- Import xorq and its deferred object, which allow us to referred to columns
+- Create a xorq connection (backed by the xorq backend)
+- Create a DuckDB connection
+- Create a Postgres connection
+
+Note that you can create a custom Postgres connection by specifying the different parameters, for example:
+
+```python
+pg = xo.postgres.connect(
+  host="localhost",
+  port=5432,
+  user="postgres",
+  password="postgres",
+  database="ibis_testing"
+)
+```
+
+## Reading Data
+
+Now let's read some data into xorq:
+
+```python
+# Read a parquet file using xorq
+path = xo.config.options.pins.get_path("batting")
+batting = con.read_parquet(path, table="batting")
+```
+
+xorq can read data from various sources. Here we're reading a Parquet file directly. The `table_name` parameter specifies how this table will be referenced inside the `con` backend.
+
+## Basic Operations
+
+Let's perform some basic data operations:
+
+```python
+# Filtering and selection
+recent_batting = (
+    batting[batting.yearID > 2010]  # filter for recent years
+    .select(['playerID', 'yearID', 'teamID', 'G', 'AB', 'R', 'H'])  # select specific columns
+)
+
+# Execute to see results
+recent_batting.execute()
+```
+The output is
+
+```bash
+       playerID  yearID teamID    G     AB     R      H
+0     utleych01    2013    PHI  131  476.0  73.0  135.0
+1     valaich01    2013    MIA   22   64.0   4.0   14.0
+2     valbulu01    2013    CHN  108  331.0  34.0   72.0
+3     valdejo02    2013    NYN   66  133.0  16.0   25.0
+4     valdelu01    2013    BAL    4    0.0   0.0    0.0
+...         ...     ...    ...  ...    ...   ...    ...
+7122  ugglada01    2013    ATL  136  448.0  60.0   80.0
+7123  uptonbj01    2013    ATL  126  391.0  30.0   72.0
+7124  uptonju01    2013    ATL  149  558.0  94.0  147.0
+7125  uribeju01    2013    LAN  132  388.0  47.0  108.0
+7126  urruthe01    2013    BAL   24   58.0   5.0   16.0
+
+[7127 rows x 7 columns]
+```
+
+Note that xorq operations are lazy - they don't execute until you call `execute`, which returns a pandas
+DataFrame.
+
+## Multi-Engine Operations
+
+One of xorq's powerful features is the ability to move data between different backends using `into_backend()`.
+This method converts an expression from one backend into a table in another backend, using a PyArrow [RecordBatchReader](https://arrow.apache.org/docs/python/generated/pyarrow.RecordBatchReader.html)
+as an intermediate format:
+
+```python
+# Read a table from Postgres and move it to xorq's backend
+awards = pg.table("awards_players").into_backend(con, "awards")  # bring into xorq backend
+
+# Perform a join between the two tables
+player_awards = (
+    recent_batting.join(
+        awards,
+        ['playerID', 'yearID'],  # join keys
+        how='left'  # left join
+    )
+    .select([
+        'playerID',
+        'yearID',
+        'teamID',
+        'awardID',
+        'G',
+        'AB',
+        'H'
+    ])
+)
+
+player_awards.execute()
+```
+
+The corresponding output is:
+
+```bash
+       playerID  yearID teamID                      awardID    G     AB      H
+0     victosh01    2011    PHI          Branch Rickey Award  132  519.0  145.0
+1     aybarer01    2011    LAA                   Gold Glove  143  556.0  155.0
+2     parrage01    2011    ARI                   Gold Glove  141  445.0  130.0
+3     rodnefe01    2012    TBA  Comeback Player of the Year   76    0.0    0.0
+4     molinya01    2012    SLN                   Gold Glove  138  505.0  159.0
+...         ...     ...    ...                          ...  ...    ...    ...
+7196  sanchjo01    2013    PIT                         None    6    5.0    0.0
+7197  saundmi01    2013    SEA                         None  132  406.0   96.0
+7198  selleju01    2013    LAN                         None   27   69.0   13.0
+7199  skipwky01    2013    MIA                         None    4    3.0    0.0
+7200  sogarer01    2013    OAK                         None  130  368.0   98.0
+
+[7201 rows x 7 columns]
+```
+
+`into_backend()` is particularly useful when you want to:
+- Move data between different database engines
+- Combine data from multiple sources
+- Avoid writing intermediate results to disk
+
+### Leveraging Different Backends
+
+Different backends have different strengths. Let's use DuckDB for some aggregations:
+
+```python
+# Move data to DuckDB for additional processing
+ddb_awards = player_awards.into_backend(ddb, "ddb_awards")
+
+# Perform DuckDB-specific operations
+ddb_summary = (
+    ddb_awards.group_by(['yearID', 'awardID'])
+    .agg([
+        _.count().name('player_count'),
+        _.G.mean().name('avg_games'),
+        _.H.mean().name('avg_hits'),
+    ])
+    .order_by(['yearID', 'awardID'])
+)
+
+print("Award summary from DuckDB:")
+ddb_summary.execute()
+```
+
+The output:
+
+```bash
+    yearID                              awardID  ...   avg_games    avg_hits
+0     2011                             ALCS MVP  ...  124.000000  125.000000
+1     2011                    All-Star Game MVP  ...  162.000000  170.000000
+2     2011                      Babe Ruth Award  ...   97.000000   99.000000
+3     2011                  Branch Rickey Award  ...  132.000000  145.000000
+4     2011          Comeback Player of the Year  ...  151.500000  179.500000
+..     ...                                  ...  ...         ...         ...
+80    2015                   Rookie of the Year  ...  125.000000  131.000000
+81    2015                       Silver Slugger  ...  144.555556  160.722222
+82    2015  TSN Major League Player of the Year  ...  158.000000  184.000000
+83    2015                     World Series MVP  ...  142.000000  138.000000
+84    2015                                 None  ...   45.295580   25.419199
+
+[85 rows x 5 columns]
+```
+
+## Caching Expressions
+
+xorq provides caching capabilities to optimize performance:
+
+```python
+from pathlib import Path
+from xorq.common.caching import ParquetCacheStorage
+
+# Create a storage for cached data
+cache_storage = ParquetCacheStorage(source=con, path=Path.cwd())
+
+# Cache the results
+cached_awards = player_awards.cache(storage=cache_storage)
+
+# The next execution will use the cached data
+cached_awards.execute()
+```
+
+## Key Takeaways
+
+- xorq provides a consistent interface across different data engines
+- Operations are lazy until `.execute()` is called
+- Data can be moved between backends using `into_backend()`
+- Caching helps optimize performance for frequently used queries
+- Different backends can be leveraged for their specific strengths

@@ -1,0 +1,108 @@
+---
+title: 'Getting Started'
+---
+
+## Installation
+
+xorq can be installed using pip:
+
+```bash
+pip install xorq
+```
+
+Or using nix to drop into an IPython shell:
+
+```bash
+nix run github:letsql/xorq
+```
+
+## Quick Start
+
+Let's build a simple data pipeline using xorq to analyze the Palmer Penguins dataset:
+
+```python
+import xorq as xo
+
+# Create a connection
+con = xo.connect()
+
+# Load the penguins dataset
+penguins = xo.examples.penguins.fetch(backend=con)
+
+# Analyze bill dimensions by species for large penguins
+result = (
+    penguins.filter([penguins.body_mass_g > 4000])  # Focus on larger penguins
+    .group_by("species")
+    .agg([
+        penguins.bill_length_mm.mean().name("avg_bill_length"),
+        penguins.bill_depth_mm.mean().name("avg_bill_depth")
+    ])
+    .execute()
+)
+```
+
+## First Pipeline Walk-through
+
+Let's build a more complex pipeline that demonstrates key xorq features. We'll:
+1. Cache intermediate results from one engine into another
+2. Use a machine learning model for predictions
+3. Filter the results
+
+```python
+import xorq as xo
+from xorq.common.caching import ParquetCacheStorage
+import pathlib
+
+# Create connections to different engines
+con = xo.connect()
+ddb = xo.duckdb.connect()
+
+# Set up cache storage
+storage = ParquetCacheStorage(
+    source=con,
+    path=pathlib.Path.cwd()
+)
+
+# Get pre-trained model path
+model_name = "diamonds-model"
+model_path = xo.options.pins.get_path(model_name)
+
+# Register model for predictions
+predict_xgb = con.register_xgb_model(model_name, model_path)
+
+# Build pipeline:
+# 1. Load data from DuckDB
+# 2. Cache intermediate results
+# 3. Make predictions using XGBoost model
+# 4. Filter results
+table = (
+    xo.examples.diamonds.fetch(backend=ddb)  # Load data
+    .cache(storage=storage)  # Cache results
+    .mutate(prediction=predict_xgb.on_expr)  # Add predictions
+    .filter(xo._.carat < 1)  # Filter small diamonds
+    .select([
+        "carat",
+        "cut",
+        "color",
+        "price",
+        "prediction"
+    ])
+)
+
+# Execute pipeline
+table.execute()
+```
+
+This example demonstrates several key xorq capabilities:
+
+1. **Multi-engine Support**: Using both DataFusion and DuckDB
+2. **Caching**: Persisting intermediate results with ParquetCacheStorage
+3. **ML Integration**: Loading and using XGBoost models
+4. **Expressive API**: Chaining operations with a ibis-like interface
+
+## Next Steps
+
+- Explore multi-engine workflows using `into_backend`
+- Learn about different caching strategies
+- Create custom UDFs for data transformations
+- Check out sample scripts in the examples directory

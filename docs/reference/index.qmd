@@ -1,0 +1,15 @@
+# Reference {.doc .doc-index}
+
+## Expression API
+
+APIs for manipulating table, column and scalar expressions
+
+| | |
+| --- | --- |
+| [Table expressions](expression-relations.qmd) | Tables are one of the core data structures in Ibis. |
+| [Generic expressions](expression-generic.qmd) | Scalars and columns of any element type. |
+| [Numeric and Boolean expressions](expression-numeric.qmd) | Integer, floating point, decimal, and boolean expressions. |
+| [String expressions](expression-strings.qmd) | All string operations are valid for both scalars and columns. |
+| [Temporal expressions](expression-temporal.qmd) | Dates, times, timestamps and intervals. |
+| [Top Level API functions](toplevel-api.qmd) |  |
+| [ML API functions](ml-api.qmd) |  |

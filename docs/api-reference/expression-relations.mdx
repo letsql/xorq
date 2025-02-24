@@ -1,0 +1,1420 @@
+---
+title: 'Table expressions'
+---
+
+Tables are one of the core data structures in Ibis.
+
+# <span id="letsql.vendor.ibis.expr.types.relations.Table">Table</span>
+
+```python
+Table(self, arg)
+```
+
+An immutable and lazy dataframe.
+
+Analogous to a SQL table or a pandas DataFrame. A table expression
+contains an [ordered set of named
+columns](./schemas.qmd#ibis.expr.schema.Schema), each with a single
+known type. Unless explicitly ordered with an
+[`.order_by()`](./expression-tables.qmd#letsql.expr.types.relations.Table.order_by),
+the order of rows is undefined.
+
+Table immutability means that the data underlying an Ibis `Table` cannot
+be modified: every method on a Table returns a new Table with those
+changes. Laziness means that an Ibis `Table` expression does not run
+your computation every time you call one of its methods. Instead, it is
+a symbolic expression that represents a set of operations to be
+performed, which typically is translated into a SQL query. That SQL
+query is then executed on a backend, where the data actually lives. The
+result (now small enough to be manageable) can then be materialized back
+into python as a pandas/pyarrow/python DataFrame/Column/scalar.
+
+You will not create Table objects directly. Instead, you will create one
+
+-   from a pandas DataFrame, pyarrow table, Polars table, or raw python
+    dicts/lists with
+    [`letsql.memtable(df)`](./expression-tables.qmd#letsql.memtable)
+-   from an existing table in a data platform with
+    [`connection.table("name")`](./expression-tables.qmd#letsql.backends.duckdb.Backend.table)
+-   from a file or URL, into a specific backend with
+    [`connection.read_csv/parquet/json("path/to/file")`](../backends/duckdb.qmd#letsql.backends.duckdb.Backend.read_csv)
+    (only some backends, typically local ones, support this)
+-   from a file or URL, into the default backend with
+    [`ibis.read_csv/read_json/read_parquet("path/to/file")`](./expression-tables.qmd#ibis.read_csv)
+
+## Methods
+
+| Name                                                                        | Description                                                                                 |
+|------------------------------------|------------------------------------|
+| [alias](#letsql.vendor.ibis.expr.types.relations.Table.alias)               | Create a table expression with a specific name `alias`.                                     |
+| [as_scalar](#letsql.vendor.ibis.expr.types.relations.Table.as_scalar)       | Inform ibis that the table expression should be treated as a scalar.                        |
+| [count](#letsql.vendor.ibis.expr.types.relations.Table.count)               | Compute the number of rows in the table.                                                    |
+| [difference](#letsql.vendor.ibis.expr.types.relations.Table.difference)     | Compute the set difference of multiple table expressions.                                   |
+| [distinct](#letsql.vendor.ibis.expr.types.relations.Table.distinct)         | Return a Table with duplicate rows removed.                                                 |
+| [dropna](#letsql.vendor.ibis.expr.types.relations.Table.dropna)             | Deprecated - use `drop_null` instead.                                                       |
+| [fillna](#letsql.vendor.ibis.expr.types.relations.Table.fillna)             | Deprecated - use `fill_null` instead.                                                       |
+| [filter](#letsql.vendor.ibis.expr.types.relations.Table.filter)             | Select rows from `table` based on `predicates`.                                             |
+| [intersect](#letsql.vendor.ibis.expr.types.relations.Table.intersect)       | Compute the set intersection of multiple table expressions.                                 |
+| [limit](#letsql.vendor.ibis.expr.types.relations.Table.limit)               | Select `n` rows from `self` starting at `offset`.                                           |
+| [order_by](#letsql.vendor.ibis.expr.types.relations.Table.order_by)         | Sort a table by one or more expressions.                                                    |
+| [sample](#letsql.vendor.ibis.expr.types.relations.Table.sample)             | Sample a fraction of rows from a table.                                                     |
+| [select](#letsql.vendor.ibis.expr.types.relations.Table.select)             | Compute a new table expression using `exprs` and `named_exprs`.                             |
+| [sql](#letsql.vendor.ibis.expr.types.relations.Table.sql)                   | Run a SQL query against a table expression.                                                 |
+| [union](#letsql.vendor.ibis.expr.types.relations.Table.union)               | Compute the set union of multiple table expressions.                                        |
+| [view](#letsql.vendor.ibis.expr.types.relations.Table.view)                 | Create a new table expression distinct from the current one.                                |
+| [cache](#letsql.vendor.ibis.expr.types.relations.Table.cache)               | Cache the results of a computation to improve performance on subsequent executions.         |
+| [into_backend](#letsql.vendor.ibis.expr.types.relations.Table.into_backend) | Converts the Expr to a table in the given backend `con` with an optional table name `name`. |
+
+### <span id="letsql.vendor.ibis.expr.types.relations.Table.alias">alias</span>
+
+```python
+alias(alias)
+```
+
+Create a table expression with a specific name `alias`.
+
+This method is useful for exposing an ibis expression to the underlying
+backend for use in the
+[`Table.sql`](#ibis.expr.types.relations.Table.sql) method.
+
+<Note>
+
+`.alias` creates a temporary view in the database.
+
+This side effect will be removed in a future version of xorq and **is
+not part of the public API**.
+
+</Note>
+
+#### Parameters
+
+| Name  | Type             | Description                  | Default    |
+|-------|------------------|------------------------------|------------|
+| alias | [str](%60str%60) | Name of the child expression | *required* |
+
+#### Returns
+
+| Name | Type                                                         | Description         |
+|--------|-----------------------------------------------|------------------|
+|      | [Table](%60letsql.vendor.ibis.expr.types.relations.Table%60) | An table expression |
+
+#### Examples
+
+```python
+>>> import letsql as ls
+>>> ls.options.interactive = True
+>>> t = ls.examples.penguins.fetch()
+>>> expr = t.alias("pingüinos").sql('SELECT * FROM "pingüinos" LIMIT 5')
+>>> expr
+┏━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━┓
+┃ species ┃ island    ┃ bill_length_mm ┃ bill_depth_mm ┃ flipper_length_mm ┃ … ┃
+┡━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━┩
+│ string  │ string    │ float64        │ float64       │ float64           │ … │
+├─────────┼───────────┼────────────────┼───────────────┼───────────────────┼───┤
+│ Adelie  │ Torgersen │           39.1 │          18.7 │             181.0 │ … │
+│ Adelie  │ Torgersen │           39.5 │          17.4 │             186.0 │ … │
+│ Adelie  │ Torgersen │           40.3 │          18.0 │             195.0 │ … │
+│ Adelie  │ Torgersen │           NULL │          NULL │              NULL │ … │
+│ Adelie  │ Torgersen │           36.7 │          19.3 │             193.0 │ … │
+└─────────┴───────────┴────────────────┴───────────────┴───────────────────┴───┘
+```
+
+### <span id="letsql.vendor.ibis.expr.types.relations.Table.as_scalar">as_scalar</span>
+
+```python
+as_scalar()
+```
+
+Inform ibis that the table expression should be treated as a scalar.
+
+Note that the table must have exactly one column and one row for this to
+work. If the table has more than one column an error will be raised in
+expression construction time. If the table has more than one row an
+error will be raised by the backend when the expression is executed.
+
+#### Returns
+
+| Name | Type                                                      | Description       |
+|--------|-----------------------------------------------|-----------------|
+|      | [Scalar](%60letsql.vendor.ibis.expr.types.uuid.Scalar%60) | A scalar subquery |
+
+#### Examples
+
+```python
+>>> import letsql as ls
+>>> ls.options.interactive = True
+>>> t = ls.examples.penguins.fetch()
+>>> heavy_gentoo = t.filter(t.species == "Gentoo", t.body_mass_g > 6200)
+>>> from_that_island = t.filter(t.island == heavy_gentoo.select("island").as_scalar())
+>>> from_that_island.species.value_counts().order_by("species")
+┏━━━━━━━━━┳━━━━━━━━━━━━━━━┓
+┃ species ┃ species_count ┃
+┡━━━━━━━━━╇━━━━━━━━━━━━━━━┩
+│ string  │ int64         │
+├─────────┼───────────────┤
+│ Adelie  │            44 │
+│ Gentoo  │           124 │
+└─────────┴───────────────┘
+```
+
+### <span id="letsql.vendor.ibis.expr.types.relations.Table.count">count</span>
+
+```python
+count(where=None)
+```
+
+Compute the number of rows in the table.
+
+#### Parameters
+
+| Name  | Type                                                                                                               | Description                                               | Default |
+|----|----------------------------------------|-----------------------|-----|
+| where | [ir](%60letsql.vendor.ibis.expr.types%60).[BooleanValue](%60letsql.vendor.ibis.expr.types.BooleanValue%60) \| None | Optional boolean expression to filter rows when counting. | `None`  |
+
+#### Returns
+
+| Name | Type                                                                       | Description                 |
+|------|----------------------------------------------|--------------------|
+|      | [IntegerScalar](%60letsql.vendor.ibis.expr.types.numeric.IntegerScalar%60) | Number of rows in the table |
+
+#### Examples
+
+```python
+>>> import letsql as ls
+>>> ls.options.interactive = True
+>>> t = ls.memtable({"a": ["foo", "bar", "baz"]})
+>>> t
+┏━━━━━━━━┓
+┃ a      ┃
+┡━━━━━━━━┩
+│ string │
+├────────┤
+│ foo    │
+│ bar    │
+│ baz    │
+└────────┘
+>>> t.count()
+┌───┐
+│ 3 │
+└───┘
+>>> t.count(t.a != "foo")
+┌───┐
+│ 2 │
+└───┘
+>>> type(t.count())
+<class 'letsql.vendor.ibis.expr.types.numeric.IntegerScalar'>
+```
+
+### <span id="letsql.vendor.ibis.expr.types.relations.Table.difference">difference</span>
+
+```python
+difference(table, *rest, distinct=True)
+```
+
+Compute the set difference of multiple table expressions.
+
+The input tables must have identical schemas.
+
+#### Parameters
+
+| Name     | Type                                                         | Description                                                | Default    |
+|------|-----------------------------|------------------------------|-------|
+| table    | [Table](%60letsql.vendor.ibis.expr.types.relations.Table%60) | A table expression                                         | *required* |
+| \*rest   | [Table](%60letsql.vendor.ibis.expr.types.relations.Table%60) | Additional table expressions                               | `()`       |
+| distinct | [bool](%60bool%60)                                           | Only diff distinct rows not occurring in the calling table | `True`     |
+
+#### See Also
+
+[`ibis.difference`](./expression-tables.qmd#ibis.difference)
+
+#### Returns
+
+| Name | Type                                                         | Description                                                  |
+|------|--------------------------------|----------------------------------|
+|      | [Table](%60letsql.vendor.ibis.expr.types.relations.Table%60) | The rows present in `self` that are not present in `tables`. |
+
+#### Examples
+
+```python
+>>> import letsql as ls
+>>> ls.options.interactive = True
+>>> t1 = ls.memtable({"a": [1, 2]})
+>>> t1
+┏━━━━━━━┓
+┃ a     ┃
+┡━━━━━━━┩
+│ int64 │
+├───────┤
+│     1 │
+│     2 │
+└───────┘
+>>> t2 = ls.memtable({"a": [2, 3]})
+>>> t2
+┏━━━━━━━┓
+┃ a     ┃
+┡━━━━━━━┩
+│ int64 │
+├───────┤
+│     2 │
+│     3 │
+└───────┘
+>>> t1.difference(t2)
+┏━━━━━━━┓
+┃ a     ┃
+┡━━━━━━━┩
+│ int64 │
+├───────┤
+│     1 │
+└───────┘
+```
+
+### <span id="letsql.vendor.ibis.expr.types.relations.Table.distinct">distinct</span>
+
+```python
+distinct(on=None, keep='first')
+```
+
+Return a Table with duplicate rows removed.
+
+Similar to `pandas.DataFrame.drop_duplicates()`.
+
+<Note>
+Some backends do not support `keep='last'`
+</Note>
+
+#### Parameters
+
+| Name | Type                                                                                                                                                                                          | Description                                                                                                                                                                                  | Default   |
+|---|--------------------------------|-----------------------------------|---|
+| on   | [str](%60str%60) \| [Iterable](%60collections.abc.Iterable%60)\[[str](%60str%60)\] \| [s](%60letsql.vendor.ibis.selectors%60).[Selector](%60letsql.vendor.ibis.selectors.Selector%60) \| None | Only consider certain columns for identifying duplicates. By default, deduplicate all of the columns.                                                                                        | `None`    |
+| keep | [Literal](%60typing.Literal%60)\['first', 'last'\] \| None                                                                                                                                    | Determines which duplicates to keep. - `"first"`: Drop duplicates except for the first occurrence. - `"last"`: Drop duplicates except for the last occurrence. - `None`: Drop all duplicates | `'first'` |
+
+#### Examples
+
+```python
+>>> import letsql as ls
+>>> import letsql.examples as ex
+>>> import letsql.selectors as s
+>>> ls.options.interactive = True
+>>> t = ex.penguins.fetch()
+>>> t
+┏━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━┓
+┃ species ┃ island    ┃ bill_length_mm ┃ bill_depth_mm ┃ flipper_length_mm ┃ … ┃
+┡━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━┩
+│ string  │ string    │ float64        │ float64       │ float64           │ … │
+├─────────┼───────────┼────────────────┼───────────────┼───────────────────┼───┤
+│ Adelie  │ Torgersen │           39.1 │          18.7 │             181.0 │ … │
+│ Adelie  │ Torgersen │           39.5 │          17.4 │             186.0 │ … │
+│ Adelie  │ Torgersen │           40.3 │          18.0 │             195.0 │ … │
+│ Adelie  │ Torgersen │           NULL │          NULL │              NULL │ … │
+│ Adelie  │ Torgersen │           36.7 │          19.3 │             193.0 │ … │
+│ Adelie  │ Torgersen │           39.3 │          20.6 │             190.0 │ … │
+│ Adelie  │ Torgersen │           38.9 │          17.8 │             181.0 │ … │
+│ Adelie  │ Torgersen │           39.2 │          19.6 │             195.0 │ … │
+│ Adelie  │ Torgersen │           34.1 │          18.1 │             193.0 │ … │
+│ Adelie  │ Torgersen │           42.0 │          20.2 │             190.0 │ … │
+│ …       │ …         │              … │             … │                 … │ … │
+└─────────┴───────────┴────────────────┴───────────────┴───────────────────┴───┘
+```
+
+Compute the distinct rows of a subset of columns
+
+```python
+>>> t[["species", "island"]].distinct().order_by(s.all())
+┏━━━━━━━━━━━┳━━━━━━━━━━━┓
+┃ species   ┃ island    ┃
+┡━━━━━━━━━━━╇━━━━━━━━━━━┩
+│ string    │ string    │
+├───────────┼───────────┤
+│ Adelie    │ Biscoe    │
+│ Adelie    │ Dream     │
+│ Adelie    │ Torgersen │
+│ Chinstrap │ Dream     │
+│ Gentoo    │ Biscoe    │
+└───────────┴───────────┘
+```
+
+Drop all duplicate rows except the first
+
+```python
+>>> t.distinct(on=["species", "island"], keep="first").order_by(s.all())
+┏━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━┓
+┃ species   ┃ island    ┃ bill_length_mm ┃ bill_depth_… ┃ flipper_length_mm ┃  ┃
+┡━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━┩
+│ string    │ string    │ float64        │ float64      │ float64           │  │
+├───────────┼───────────┼────────────────┼──────────────┼───────────────────┼──┤
+│ Adelie    │ Biscoe    │           37.8 │         18.3 │             174.0 │  │
+│ Adelie    │ Dream     │           39.5 │         16.7 │             178.0 │  │
+│ Adelie    │ Torgersen │           39.1 │         18.7 │             181.0 │  │
+│ Chinstrap │ Dream     │           46.5 │         17.9 │             192.0 │  │
+│ Gentoo    │ Biscoe    │           46.1 │         13.2 │             211.0 │  │
+└───────────┴───────────┴────────────────┴──────────────┴───────────────────┴──┘
+```
+
+Drop all duplicate rows except the last
+
+```python
+>>> t.distinct(on=["species", "island"], keep="last").order_by(s.all())
+┏━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━┓
+┃ species   ┃ island    ┃ bill_length_mm ┃ bill_depth_… ┃ flipper_length_mm ┃  ┃
+┡━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━┩
+│ string    │ string    │ float64        │ float64      │ float64           │  │
+├───────────┼───────────┼────────────────┼──────────────┼───────────────────┼──┤
+│ Adelie    │ Biscoe    │           42.7 │         18.3 │             196.0 │  │
+│ Adelie    │ Dream     │           41.5 │         18.5 │             201.0 │  │
+│ Adelie    │ Torgersen │           43.1 │         19.2 │             197.0 │  │
+│ Chinstrap │ Dream     │           50.2 │         18.7 │             198.0 │  │
+│ Gentoo    │ Biscoe    │           49.9 │         16.1 │             213.0 │  │
+└───────────┴───────────┴────────────────┴──────────────┴───────────────────┴──┘
+```
+
+Drop all duplicated rows
+
+```python
+>>> expr = t.distinct(on=["species", "island", "year", "bill_length_mm"], keep=None)
+>>> expr.count()
+┌─────┐
+│ 273 │
+└─────┘
+>>> t.count()
+┌─────┐
+│ 344 │
+└─────┘
+```
+
+You can pass [`selectors`](./selectors.qmd) to `on`
+
+```python
+>>> t.distinct(on=~s.numeric())
+┏━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━┓
+┃ species ┃ island    ┃ bill_length_mm ┃ bill_depth_mm ┃ flipper_length_mm ┃ … ┃
+┡━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━┩
+│ string  │ string    │ float64        │ float64       │ int64             │ … │
+├─────────┼───────────┼────────────────┼───────────────┼───────────────────┼───┤
+│ Adelie  │ Torgersen │           39.1 │          18.7 │               181 │ … │
+│ Adelie  │ Torgersen │           39.5 │          17.4 │               186 │ … │
+│ Adelie  │ Torgersen │           NULL │          NULL │              NULL │ … │
+│ Adelie  │ Biscoe    │           37.8 │          18.3 │               174 │ … │
+│ Adelie  │ Biscoe    │           37.7 │          18.7 │               180 │ … │
+│ Adelie  │ Dream     │           39.5 │          16.7 │               178 │ … │
+│ Adelie  │ Dream     │           37.2 │          18.1 │               178 │ … │
+│ Adelie  │ Dream     │           37.5 │          18.9 │               179 │ … │
+│ Gentoo  │ Biscoe    │           46.1 │          13.2 │               211 │ … │
+│ Gentoo  │ Biscoe    │           50.0 │          16.3 │               230 │ … │
+│ …       │ …         │              … │             … │                 … │ … │
+└─────────┴───────────┴────────────────┴───────────────┴───────────────────┴───┘
+```
+
+The only valid values of `keep` are `"first"`, `"last"` and
+[](%60None%60).
+
+```python
+>>> t.distinct(on="species", keep="second")  # quartodoc: +EXPECTED_FAILURE
+Traceback (most recent call last):
+  ...
+letsql.vendor.ibis.common.exceptions.LetSQLError: Invalid value for `keep`: 'second', must be 'first', 'last' or None
+```
+
+### <span id="letsql.vendor.ibis.expr.types.relations.Table.dropna">dropna</span>
+
+```python
+dropna(subset=None, how='any')
+```
+
+Deprecated - use `drop_null` instead.
+
+### <span id="letsql.vendor.ibis.expr.types.relations.Table.fillna">fillna</span>
+
+```python
+fillna(replacements)
+```
+
+Deprecated - use `fill_null` instead.
+
+### <span id="letsql.vendor.ibis.expr.types.relations.Table.filter">filter</span>
+
+```python
+filter(*predicates)
+```
+
+Select rows from `table` based on `predicates`.
+
+#### Parameters
+
+| Name       | Type                                                                                                                                                                                                                                                                                                                              | Description                                               | Default |
+|----|------------------------------------------------------|------------|---|
+| predicates | [ir](%60letsql.vendor.ibis.expr.types%60).[BooleanValue](%60letsql.vendor.ibis.expr.types.BooleanValue%60) \| [Sequence](%60collections.abc.Sequence%60)\[[ir](%60letsql.vendor.ibis.expr.types%60).[BooleanValue](%60letsql.vendor.ibis.expr.types.BooleanValue%60)\] \| [IfAnyAll](%60letsql.vendor.ibis.selectors.IfAnyAll%60) | Boolean value expressions used to select rows in `table`. | `()`    |
+
+#### Returns
+
+| Name | Type                                                         | Description               |
+|-------|--------------------------------------------|---------------------|
+|      | [Table](%60letsql.vendor.ibis.expr.types.relations.Table%60) | Filtered table expression |
+
+#### Examples
+
+```python
+>>> import letsql as ls
+>>> ls.options.interactive = True
+>>> t = ls.examples.penguins.fetch()
+>>> t
+┏━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━┓
+┃ species ┃ island    ┃ bill_length_mm ┃ bill_depth_mm ┃ flipper_length_mm ┃ … ┃
+┡━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━┩
+│ string  │ string    │ float64        │ float64       │ float64           │ … │
+├─────────┼───────────┼────────────────┼───────────────┼───────────────────┼───┤
+│ Adelie  │ Torgersen │           39.1 │          18.7 │             181.0 │ … │
+│ Adelie  │ Torgersen │           39.5 │          17.4 │             186.0 │ … │
+│ Adelie  │ Torgersen │           40.3 │          18.0 │             195.0 │ … │
+│ Adelie  │ Torgersen │           NULL │          NULL │              NULL │ … │
+│ Adelie  │ Torgersen │           36.7 │          19.3 │             193.0 │ … │
+│ Adelie  │ Torgersen │           39.3 │          20.6 │             190.0 │ … │
+│ Adelie  │ Torgersen │           38.9 │          17.8 │             181.0 │ … │
+│ Adelie  │ Torgersen │           39.2 │          19.6 │             195.0 │ … │
+│ Adelie  │ Torgersen │           34.1 │          18.1 │             193.0 │ … │
+│ Adelie  │ Torgersen │           42.0 │          20.2 │             190.0 │ … │
+│ …       │ …         │              … │             … │                 … │ … │
+└─────────┴───────────┴────────────────┴───────────────┴───────────────────┴───┘
+>>> t.filter([t.species == "Adelie", t.body_mass_g > 3500]).sex.value_counts().drop_null(
+...     "sex"
+... ).order_by("sex")
+┏━━━━━━━━┳━━━━━━━━━━━┓
+┃ sex    ┃ sex_count ┃
+┡━━━━━━━━╇━━━━━━━━━━━┩
+│ string │ int64     │
+├────────┼───────────┤
+│ female │        22 │
+│ male   │        68 │
+└────────┴───────────┘
+```
+
+### <span id="letsql.vendor.ibis.expr.types.relations.Table.intersect">intersect</span>
+
+```python
+intersect(table, *rest, distinct=True)
+```
+
+Compute the set intersection of multiple table expressions.
+
+The input tables must have identical schemas.
+
+#### Parameters
+
+| Name     | Type                                                         | Description                  | Default    |
+|--------|-------------------------------------|--------------------|---------|
+| table    | [Table](%60letsql.vendor.ibis.expr.types.relations.Table%60) | A table expression           | *required* |
+| \*rest   | [Table](%60letsql.vendor.ibis.expr.types.relations.Table%60) | Additional table expressions | `()`       |
+| distinct | [bool](%60bool%60)                                           | Only return distinct rows    | `True`     |
+
+#### Returns
+
+| Name | Type                                                         | Description                                                  |
+|------|--------------------------------|----------------------------------|
+|      | [Table](%60letsql.vendor.ibis.expr.types.relations.Table%60) | A new table containing the intersection of all input tables. |
+
+#### See Also
+
+[`ibis.intersect`](./expression-tables.qmd#ibis.intersect)
+
+#### Examples
+
+```python
+>>> import letsql as ls
+>>> ls.options.interactive = True
+>>> t1 = ls.memtable({"a": [1, 2]})
+>>> t1
+┏━━━━━━━┓
+┃ a     ┃
+┡━━━━━━━┩
+│ int64 │
+├───────┤
+│     1 │
+│     2 │
+└───────┘
+>>> t2 = ls.memtable({"a": [2, 3]})
+>>> t2
+┏━━━━━━━┓
+┃ a     ┃
+┡━━━━━━━┩
+│ int64 │
+├───────┤
+│     2 │
+│     3 │
+└───────┘
+>>> t1.intersect(t2)
+┏━━━━━━━┓
+┃ a     ┃
+┡━━━━━━━┩
+│ int64 │
+├───────┤
+│     2 │
+└───────┘
+```
+
+### <span id="letsql.vendor.ibis.expr.types.relations.Table.limit">limit</span>
+
+```python
+limit(n, offset=0)
+```
+
+Select `n` rows from `self` starting at `offset`.
+
+<Note>
+The result set is not deterministic without a call to
+[`order_by`](#ibis.expr.types.relations.Table.order_by).]
+</Note>
+
+#### Parameters
+
+| Name   | Type                     | Description                                                                                | Default    |
+|------|-------------|------------------------------------------------|--------|
+| n      | [int](%60int%60) \| None | Number of rows to include. If `None`, the entire table is selected starting from `offset`. | *required* |
+| offset | [int](%60int%60)         | Number of rows to skip first                                                               | `0`        |
+
+#### Returns
+
+| Name | Type                                                         | Description                                       |
+|------|-----------------------------------|-------------------------------|
+|      | [Table](%60letsql.vendor.ibis.expr.types.relations.Table%60) | The first `n` rows of `self` starting at `offset` |
+
+#### Examples
+
+```python
+>>> import letsql as ls
+>>> ls.options.interactive = True
+>>> t = ls.memtable({"a": [1, 1, 2], "b": ["c", "a", "a"]})
+>>> t
+┏━━━━━━━┳━━━━━━━━┓
+┃ a     ┃ b      ┃
+┡━━━━━━━╇━━━━━━━━┩
+│ int64 │ string │
+├───────┼────────┤
+│     1 │ c      │
+│     1 │ a      │
+│     2 │ a      │
+└───────┴────────┘
+>>> t.limit(2)
+┏━━━━━━━┳━━━━━━━━┓
+┃ a     ┃ b      ┃
+┡━━━━━━━╇━━━━━━━━┩
+│ int64 │ string │
+├───────┼────────┤
+│     1 │ c      │
+│     1 │ a      │
+└───────┴────────┘
+```
+
+You can use `None` with `offset` to slice starting from a particular row
+
+```python
+>>> t.limit(None, offset=1)
+┏━━━━━━━┳━━━━━━━━┓
+┃ a     ┃ b      ┃
+┡━━━━━━━╇━━━━━━━━┩
+│ int64 │ string │
+├───────┼────────┤
+│     1 │ a      │
+│     2 │ a      │
+└───────┴────────┘
+```
+
+#### See Also
+
+[`Table.order_by`](#ibis.expr.types.relations.Table.order_by)
+
+### <span id="letsql.vendor.ibis.expr.types.relations.Table.order_by">order_by</span>
+
+```python
+order_by(*by)
+```
+
+Sort a table by one or more expressions.
+
+Similar to `pandas.DataFrame.sort_values()`.
+
+#### Parameters
+
+| Name | Type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | Description                       | Default |
+|--|--------------------------------------------------------------|------|---|
+| by   | [str](%60str%60) \| [ir](%60letsql.vendor.ibis.expr.types%60).[Column](%60letsql.vendor.ibis.expr.types.Column%60) \| [s](%60letsql.vendor.ibis.selectors%60).[Selector](%60letsql.vendor.ibis.selectors.Selector%60) \| [Sequence](%60collections.abc.Sequence%60)\[[str](%60str%60)\] \| [Sequence](%60collections.abc.Sequence%60)\[[ir](%60letsql.vendor.ibis.expr.types%60).[Column](%60letsql.vendor.ibis.expr.types.Column%60)\] \| [Sequence](%60collections.abc.Sequence%60)\[[s](%60letsql.vendor.ibis.selectors%60).[Selector](%60letsql.vendor.ibis.selectors.Selector%60)\] \| None | Expressions to sort the table by. | `()`    |
+
+#### Returns
+
+| Name | Type                                                         | Description  |
+|--------|--------------------------------------------------|--------------|
+|      | [Table](%60letsql.vendor.ibis.expr.types.relations.Table%60) | Sorted table |
+
+#### Examples
+
+```python
+>>> import letsql as ls
+>>> ls.options.interactive = True
+>>> t = ls.memtable(
+...     {
+...         "a": [3, 2, 1, 3],
+...         "b": ["a", "B", "c", "D"],
+...         "c": [4, 6, 5, 7],
+...     }
+... )
+>>> t
+┏━━━━━━━┳━━━━━━━━┳━━━━━━━┓
+┃ a     ┃ b      ┃ c     ┃
+┡━━━━━━━╇━━━━━━━━╇━━━━━━━┩
+│ int64 │ string │ int64 │
+├───────┼────────┼───────┤
+│     3 │ a      │     4 │
+│     2 │ B      │     6 │
+│     1 │ c      │     5 │
+│     3 │ D      │     7 │
+└───────┴────────┴───────┘
+```
+
+Sort by b. Default is ascending. Note how capital letters come before
+lowercase
+
+```python
+>>> t.order_by("b")
+┏━━━━━━━┳━━━━━━━━┳━━━━━━━┓
+┃ a     ┃ b      ┃ c     ┃
+┡━━━━━━━╇━━━━━━━━╇━━━━━━━┩
+│ int64 │ string │ int64 │
+├───────┼────────┼───────┤
+│     2 │ B      │     6 │
+│     3 │ D      │     7 │
+│     3 │ a      │     4 │
+│     1 │ c      │     5 │
+└───────┴────────┴───────┘
+```
+
+Sort in descending order
+
+```python
+>>> t.order_by(ls.desc("b"))
+┏━━━━━━━┳━━━━━━━━┳━━━━━━━┓
+┃ a     ┃ b      ┃ c     ┃
+┡━━━━━━━╇━━━━━━━━╇━━━━━━━┩
+│ int64 │ string │ int64 │
+├───────┼────────┼───────┤
+│     1 │ c      │     5 │
+│     3 │ a      │     4 │
+│     3 │ D      │     7 │
+│     2 │ B      │     6 │
+└───────┴────────┴───────┘
+```
+
+You can also use the deferred API to get the same result
+
+```python
+>>> from letsql import _
+>>> t.order_by(_.b.desc())
+┏━━━━━━━┳━━━━━━━━┳━━━━━━━┓
+┃ a     ┃ b      ┃ c     ┃
+┡━━━━━━━╇━━━━━━━━╇━━━━━━━┩
+│ int64 │ string │ int64 │
+├───────┼────────┼───────┤
+│     1 │ c      │     5 │
+│     3 │ a      │     4 │
+│     3 │ D      │     7 │
+│     2 │ B      │     6 │
+└───────┴────────┴───────┘
+```
+
+Sort by multiple columns/expressions
+
+```python
+>>> t.order_by(["a", _.c.desc()])
+┏━━━━━━━┳━━━━━━━━┳━━━━━━━┓
+┃ a     ┃ b      ┃ c     ┃
+┡━━━━━━━╇━━━━━━━━╇━━━━━━━┩
+│ int64 │ string │ int64 │
+├───────┼────────┼───────┤
+│     1 │ c      │     5 │
+│     2 │ B      │     6 │
+│     3 │ D      │     7 │
+│     3 │ a      │     4 │
+└───────┴────────┴───────┘
+```
+
+You can actually pass arbitrary expressions to use as sort keys. For
+example, to ignore the case of the strings in column `b`
+
+```python
+>>> t.order_by(_.b.lower())
+┏━━━━━━━┳━━━━━━━━┳━━━━━━━┓
+┃ a     ┃ b      ┃ c     ┃
+┡━━━━━━━╇━━━━━━━━╇━━━━━━━┩
+│ int64 │ string │ int64 │
+├───────┼────────┼───────┤
+│     3 │ a      │     4 │
+│     2 │ B      │     6 │
+│     1 │ c      │     5 │
+│     3 │ D      │     7 │
+└───────┴────────┴───────┘
+```
+
+This means that shuffling a Table is super simple
+
+```python
+>>> t.order_by(ls.random())
+┏━━━━━━━┳━━━━━━━━┳━━━━━━━┓
+┃ a     ┃ b      ┃ c     ┃
+┡━━━━━━━╇━━━━━━━━╇━━━━━━━┩
+│ int64 │ string │ int64 │
+├───────┼────────┼───────┤
+│     1 │ c      │     5 │
+│     3 │ D      │     7 │
+│     3 │ a      │     4 │
+│     2 │ B      │     6 │
+└───────┴────────┴───────┘
+```
+
+[Selectors](./selectors.qmd) are allowed as sort keys and are a concise
+way to sort by multiple columns matching some criteria
+
+```python
+>>> import letsql.selectors as s
+>>> penguins = ls.examples.penguins.fetch()
+>>> penguins[["year", "island"]].value_counts().order_by(s.startswith("year"))
+┏━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┓
+┃ year  ┃ island    ┃ year_island_count ┃
+┡━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━┩
+│ int64 │ string    │ int64             │
+├───────┼───────────┼───────────────────┤
+│  2007 │ Torgersen │                20 │
+│  2007 │ Biscoe    │                44 │
+│  2007 │ Dream     │                46 │
+│  2008 │ Torgersen │                16 │
+│  2008 │ Dream     │                34 │
+│  2008 │ Biscoe    │                64 │
+│  2009 │ Torgersen │                16 │
+│  2009 │ Dream     │                44 │
+│  2009 │ Biscoe    │                60 │
+└───────┴───────────┴───────────────────┘
+```
+
+Use the [`across`](./selectors.qmd#ibis.selectors.across) selector to
+apply a specific order to multiple columns
+
+```python
+>>> penguins[["year", "island"]].value_counts().order_by(
+...     s.across(s.startswith("year"), _.desc())
+... )
+┏━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┓
+┃ year  ┃ island    ┃ year_island_count ┃
+┡━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━┩
+│ int64 │ string    │ int64             │
+├───────┼───────────┼───────────────────┤
+│  2009 │ Biscoe    │                60 │
+│  2009 │ Dream     │                44 │
+│  2009 │ Torgersen │                16 │
+│  2008 │ Biscoe    │                64 │
+│  2008 │ Dream     │                34 │
+│  2008 │ Torgersen │                16 │
+│  2007 │ Dream     │                46 │
+│  2007 │ Biscoe    │                44 │
+│  2007 │ Torgersen │                20 │
+└───────┴───────────┴───────────────────┘
+```
+
+### <span id="letsql.vendor.ibis.expr.types.relations.Table.sample">sample</span>
+
+```python
+sample(fraction, *, method='row', seed=None)
+```
+
+Sample a fraction of rows from a table.
+
+<Note>
+
+Sampling is by definition a random operation. Some backends support
+specifying a `seed` for repeatable results, but not all backends support
+that option. And some backends (duckdb, for example) do support
+specifying a seed but may still not have repeatable results in all
+cases.
+
+In all cases, results are backend-specific. An execution against one
+backend is unlikely to sample the same rows when executed against a
+different backend, even with the same `seed` set.
+
+</Note>
+
+#### Parameters
+
+| Name     | Type                                              | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Default    |
+|---|--------|-----------------------------------------------------------|---|
+| fraction | [float](%60float%60)                              | The percentage of rows to include in the sample, expressed as a float between 0 and 1.                                                                                                                                                                                                                                                                                                                                                                                      | *required* |
+| method   | [Literal](%60typing.Literal%60)\['row', 'block'\] | The sampling method to use. The default is “row”, which includes each row with a probability of `fraction`. If method is “block”, some backends may instead perform sampling a fraction of blocks of rows (where “block” is a backend dependent definition). This is identical to “row” for backends lacking a blockwise sampling implementation. For those coming from SQL, “row” and “block” correspond to “bernoulli” and “system” respectively in a TABLESAMPLE clause. | `'row'`    |
+| seed     | [int](%60int%60) \| None                          | An optional random seed to use, for repeatable sampling. The range of possible seed values is backend specific (most support at least `[0, 2**31 - 1]`). Backends that never support specifying a seed for repeatable sampling will error appropriately. Note that some backends (like DuckDB) do support specifying a seed, but may still not have repeatable results in all cases.                                                                                        | `None`     |
+
+#### Returns
+
+| Name | Type                                                         | Description                                        |
+|------|-----------------------------------|-------------------------------|
+|      | [Table](%60letsql.vendor.ibis.expr.types.relations.Table%60) | The input table, with `fraction` of rows selected. |
+
+#### Examples
+
+```python
+>>> import letsql as ls
+>>> ls.options.interactive = True
+>>> t = ls.memtable({"x": [1, 2, 3, 4], "y": ["a", "b", "c", "d"]})
+>>> t
+┏━━━━━━━┳━━━━━━━━┓
+┃ x     ┃ y      ┃
+┡━━━━━━━╇━━━━━━━━┩
+│ int64 │ string │
+├───────┼────────┤
+│     1 │ a      │
+│     2 │ b      │
+│     3 │ c      │
+│     4 │ d      │
+└───────┴────────┘
+```
+
+Sample approximately half the rows, with a seed specified for
+reproducibility.
+
+```python
+>>> t.sample(0.5, seed=1234)
+┏━━━━━━━┳━━━━━━━━┓
+┃ x     ┃ y      ┃
+┡━━━━━━━╇━━━━━━━━┩
+│ int64 │ string │
+├───────┼────────┤
+│     2 │ b      │
+│     3 │ c      │
+└───────┴────────┘
+```
+
+### <span id="letsql.vendor.ibis.expr.types.relations.Table.select">select</span>
+
+```python
+select(*exprs, **named_exprs)
+```
+
+Compute a new table expression using `exprs` and `named_exprs`.
+
+Passing an aggregate function to this method will broadcast the
+aggregate’s value over the number of rows in the table and automatically
+constructs a window function expression. See the examples section for
+more details.
+
+For backwards compatibility the keyword argument `exprs` is reserved and
+cannot be used to name an expression. This behavior will be removed in
+v4.
+
+#### Parameters
+
+| Name        | Type                                                                                                                                                                                                                                                                               | Description                                                           | Default |
+|----|--------------------------------------------------|---------------|----|
+| exprs       | [ir](%60letsql.vendor.ibis.expr.types%60).[Value](%60letsql.vendor.ibis.expr.types.Value%60) \| [str](%60str%60) \| [Iterable](%60collections.abc.Iterable%60)\[[ir](%60letsql.vendor.ibis.expr.types%60).[Value](%60letsql.vendor.ibis.expr.types.Value%60) \| [str](%60str%60)\] | Column expression, string, or list of column expressions and strings. | `()`    |
+| named_exprs | [ir](%60letsql.vendor.ibis.expr.types%60).[Value](%60letsql.vendor.ibis.expr.types.Value%60) \| [str](%60str%60)                                                                                                                                                                   | Column expressions                                                    | `{}`    |
+
+#### Returns
+
+| Name | Type                                                         | Description      |
+|--------|------------------------------------------------|----------------|
+|      | [Table](%60letsql.vendor.ibis.expr.types.relations.Table%60) | Table expression |
+
+#### Examples
+
+```python
+>>> import letsql as ls
+>>> ls.options.interactive = True
+>>> t = ls.examples.penguins.fetch()
+>>> t
+┏━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━┓
+┃ species ┃ island    ┃ bill_length_mm ┃ bill_depth_mm ┃ flipper_length_mm ┃ … ┃
+┡━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━┩
+│ string  │ string    │ float64        │ float64       │ float64           │ … │
+├─────────┼───────────┼────────────────┼───────────────┼───────────────────┼───┤
+│ Adelie  │ Torgersen │           39.1 │          18.7 │             181.0 │ … │
+│ Adelie  │ Torgersen │           39.5 │          17.4 │             186.0 │ … │
+│ Adelie  │ Torgersen │           40.3 │          18.0 │             195.0 │ … │
+│ Adelie  │ Torgersen │           NULL │          NULL │              NULL │ … │
+│ Adelie  │ Torgersen │           36.7 │          19.3 │             193.0 │ … │
+│ Adelie  │ Torgersen │           39.3 │          20.6 │             190.0 │ … │
+│ Adelie  │ Torgersen │           38.9 │          17.8 │             181.0 │ … │
+│ Adelie  │ Torgersen │           39.2 │          19.6 │             195.0 │ … │
+│ Adelie  │ Torgersen │           34.1 │          18.1 │             193.0 │ … │
+│ Adelie  │ Torgersen │           42.0 │          20.2 │             190.0 │ … │
+│ …       │ …         │              … │             … │                 … │ … │
+└─────────┴───────────┴────────────────┴───────────────┴───────────────────┴───┘
+```
+
+Simple projection
+
+```python
+>>> t.select("island", "bill_length_mm").head()
+┏━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┓
+┃ island    ┃ bill_length_mm ┃
+┡━━━━━━━━━━━╇━━━━━━━━━━━━━━━━┩
+│ string    │ float64        │
+├───────────┼────────────────┤
+│ Torgersen │           39.1 │
+│ Torgersen │           39.5 │
+│ Torgersen │           40.3 │
+│ Torgersen │           NULL │
+│ Torgersen │           36.7 │
+└───────────┴────────────────┘
+```
+
+In that simple case, you could also just use python’s indexing syntax
+
+```python
+>>> t[["island", "bill_length_mm"]].head()
+┏━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┓
+┃ island    ┃ bill_length_mm ┃
+┡━━━━━━━━━━━╇━━━━━━━━━━━━━━━━┩
+│ string    │ float64        │
+├───────────┼────────────────┤
+│ Torgersen │           39.1 │
+│ Torgersen │           39.5 │
+│ Torgersen │           40.3 │
+│ Torgersen │           NULL │
+│ Torgersen │           36.7 │
+└───────────┴────────────────┘
+```
+
+Projection by zero-indexed column position
+
+```python
+>>> t.select(t[0], t[4]).head()
+┏━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┓
+┃ species ┃ flipper_length_mm ┃
+┡━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━┩
+│ string  │ float64           │
+├─────────┼───────────────────┤
+│ Adelie  │             181.0 │
+│ Adelie  │             186.0 │
+│ Adelie  │             195.0 │
+│ Adelie  │              NULL │
+│ Adelie  │             193.0 │
+└─────────┴───────────────────┘
+```
+
+Projection with renaming and compute in one call
+
+```python
+>>> t.select(next_year=t.year + 1).head()
+┏━━━━━━━━━━━┓
+┃ next_year ┃
+┡━━━━━━━━━━━┩
+│ int64     │
+├───────────┤
+│      2008 │
+│      2008 │
+│      2008 │
+│      2008 │
+│      2008 │
+└───────────┘
+```
+
+You can do the same thing with a named expression, and using the
+deferred API
+
+```python
+>>> from letsql import _
+>>> t.select((_.year + 1).name("next_year")).head()
+┏━━━━━━━━━━━┓
+┃ next_year ┃
+┡━━━━━━━━━━━┩
+│ int64     │
+├───────────┤
+│      2008 │
+│      2008 │
+│      2008 │
+│      2008 │
+│      2008 │
+└───────────┘
+```
+
+Projection with aggregation expressions
+
+```python
+>>> t.select("island", bill_mean=t.bill_length_mm.mean()).head()
+┏━━━━━━━━━━━┳━━━━━━━━━━━┓
+┃ island    ┃ bill_mean ┃
+┡━━━━━━━━━━━╇━━━━━━━━━━━┩
+│ string    │ float64   │
+├───────────┼───────────┤
+│ Torgersen │  43.92193 │
+│ Torgersen │  43.92193 │
+│ Torgersen │  43.92193 │
+│ Torgersen │  43.92193 │
+│ Torgersen │  43.92193 │
+└───────────┴───────────┘
+```
+
+Projection with a selector
+
+```python
+>>> import letsql.selectors as s
+>>> t.select(s.numeric() & ~s.cols("year")).head()
+┏━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━┓
+┃ bill_length_mm ┃ bill_depth_mm ┃ flipper_length_mm ┃ body_mass_g ┃
+┡━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━┩
+│ float64        │ float64       │ float64           │ float64     │
+├────────────────┼───────────────┼───────────────────┼─────────────┤
+│           39.1 │          18.7 │             181.0 │      3750.0 │
+│           39.5 │          17.4 │             186.0 │      3800.0 │
+│           40.3 │          18.0 │             195.0 │      3250.0 │
+│           NULL │          NULL │              NULL │        NULL │
+│           36.7 │          19.3 │             193.0 │      3450.0 │
+└────────────────┴───────────────┴───────────────────┴─────────────┘
+```
+
+Projection + aggregation across multiple columns
+
+```python
+>>> from letsql import _
+>>> t.select(s.across(s.numeric() & ~s.cols("year"), _.mean())).head()
+┏━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━┓
+┃ bill_length_mm ┃ bill_depth_mm ┃ flipper_length_mm ┃ body_mass_g ┃
+┡━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━┩
+│ float64        │ float64       │ float64           │ float64     │
+├────────────────┼───────────────┼───────────────────┼─────────────┤
+│       43.92193 │      17.15117 │        200.915205 │ 4201.754386 │
+│       43.92193 │      17.15117 │        200.915205 │ 4201.754386 │
+│       43.92193 │      17.15117 │        200.915205 │ 4201.754386 │
+│       43.92193 │      17.15117 │        200.915205 │ 4201.754386 │
+│       43.92193 │      17.15117 │        200.915205 │ 4201.754386 │
+└────────────────┴───────────────┴───────────────────┴─────────────┘
+```
+
+### <span id="letsql.vendor.ibis.expr.types.relations.Table.sql">sql</span>
+
+```python
+sql(query, dialect=None)
+```
+
+Run a SQL query against a table expression.
+
+#### Parameters
+
+| Name    | Type                     | Description                                                                                  | Default    |
+|------|------------|-----------------------------------------------|-------|
+| query   | [str](%60str%60)         | Query string                                                                                 | *required* |
+| dialect | [str](%60str%60) \| None | Optional string indicating the dialect of `query`. Defaults to the backend’s native dialect. | `None`     |
+
+#### Returns
+
+| Name | Type                                                         | Description                |
+|-------|-------------------------------------------|----------------------|
+|      | [Table](%60letsql.vendor.ibis.expr.types.relations.Table%60) | An opaque table expression |
+
+#### Examples
+
+```python
+>>> import letsql as ls
+>>> from letsql import _
+>>> ls.options.interactive = True
+>>> t = ls.examples.penguins.fetch(table_name="penguins")
+>>> expr = t.sql(
+...     """
+...     SELECT island, mean(bill_length_mm) AS avg_bill_length
+...     FROM penguins
+...     GROUP BY 1
+...     ORDER BY 2 DESC
+...     """
+... )
+>>> expr
+┏━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┓
+┃ island    ┃ avg_bill_length ┃
+┡━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━┩
+│ string    │ float64         │
+├───────────┼─────────────────┤
+│ Biscoe    │       45.257485 │
+│ Dream     │       44.167742 │
+│ Torgersen │       38.950980 │
+└───────────┴─────────────────┘
+```
+
+Mix and match ibis expressions with SQL queries
+
+```python
+>>> t = ls.examples.penguins.fetch(table_name="penguins")
+>>> expr = t.sql(
+...     """
+...     SELECT island, mean(bill_length_mm) AS avg_bill_length
+...     FROM penguins
+...     GROUP BY 1
+...     ORDER BY 2 DESC
+...     """
+... )
+>>> expr = expr.mutate(
+...     island=_.island.lower(),
+...     avg_bill_length=_.avg_bill_length.round(1),
+... )
+>>> expr
+┏━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┓
+┃ island    ┃ avg_bill_length ┃
+┡━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━┩
+│ string    │ float64         │
+├───────────┼─────────────────┤
+│ biscoe    │            45.3 │
+│ torgersen │            39.0 │
+│ dream     │            44.2 │
+└───────────┴─────────────────┘
+```
+
+Because ibis expressions aren’t named, they aren’t visible to subsequent
+`.sql` calls. Use the [`alias`](#ibis.expr.types.relations.Table.alias)
+method to assign a name to an expression.
+
+```python
+>>> expr.alias("b").sql("SELECT * FROM b WHERE avg_bill_length > 40")
+┏━━━━━━━━┳━━━━━━━━━━━━━━━━━┓
+┃ island ┃ avg_bill_length ┃
+┡━━━━━━━━╇━━━━━━━━━━━━━━━━━┩
+│ string │ float64         │
+├────────┼─────────────────┤
+│ biscoe │            45.3 │
+│ dream  │            44.2 │
+└────────┴─────────────────┘
+```
+
+#### See Also
+
+[`Table.alias`](#ibis.expr.types.relations.Table.alias)
+
+### <span id="letsql.vendor.ibis.expr.types.relations.Table.union">union</span>
+
+```python
+union(table, *rest, distinct=False)
+```
+
+Compute the set union of multiple table expressions.
+
+The input tables must have identical schemas.
+
+#### Parameters
+
+| Name     | Type                                                         | Description                  | Default    |
+|--------|-------------------------------------|--------------------|---------|
+| table    | [Table](%60letsql.vendor.ibis.expr.types.relations.Table%60) | A table expression           | *required* |
+| \*rest   | [Table](%60letsql.vendor.ibis.expr.types.relations.Table%60) | Additional table expressions | `()`       |
+| distinct | [bool](%60bool%60)                                           | Only return distinct rows    | `False`    |
+
+#### Returns
+
+| Name | Type                                                         | Description                                           |
+|------|----------------------------------|--------------------------------|
+|      | [Table](%60letsql.vendor.ibis.expr.types.relations.Table%60) | A new table containing the union of all input tables. |
+
+#### See Also
+
+[`ibis.union`](./expression-tables.qmd#ibis.union)
+
+#### Examples
+
+```python
+>>> import letsql as ls
+>>> ls.options.interactive = True
+>>> t1 = ls.memtable({"a": [1, 2]})
+>>> t1
+┏━━━━━━━┓
+┃ a     ┃
+┡━━━━━━━┩
+│ int64 │
+├───────┤
+│     1 │
+│     2 │
+└───────┘
+>>> t2 = ls.memtable({"a": [2, 3]})
+>>> t2
+┏━━━━━━━┓
+┃ a     ┃
+┡━━━━━━━┩
+│ int64 │
+├───────┤
+│     2 │
+│     3 │
+└───────┘
+>>> t1.union(t2)  # union all by default doctest: +SKIP
+┏━━━━━━━┓
+┃ a     ┃
+┡━━━━━━━┩
+│ int64 │
+├───────┤
+│     2 │
+│     3 │
+│     1 │
+│     2 │
+└───────┘
+>>> t1.union(t2, distinct=True).order_by("a")
+┏━━━━━━━┓
+┃ a     ┃
+┡━━━━━━━┩
+│ int64 │
+├───────┤
+│     1 │
+│     2 │
+│     3 │
+└───────┘
+```
+
+### <span id="letsql.vendor.ibis.expr.types.relations.Table.view">view</span>
+
+```python
+view()
+```
+
+Create a new table expression distinct from the current one.
+
+Use this API for any self-referencing operations like a self-join.
+
+#### Returns
+
+| Name | Type                                                         | Description      |
+|--------|------------------------------------------------|----------------|
+|      | [Table](%60letsql.vendor.ibis.expr.types.relations.Table%60) | Table expression |
+
+### <span id="letsql.vendor.ibis.expr.types.relations.Table.cache">cache</span>
+
+```python
+cache(storage=None)
+```
+
+Cache the results of a computation to improve performance on subsequent
+executions. This method allows you to cache the results of a computation
+either in memory, on disk using Parquet files, or in a database table.
+The caching strategy and storage location are determined by the storage
+parameter.
+
+#### Parameters
+
+| Name    | Type                               | Description                                                                                                                                                                                                                                                                                                                                                 | Default |
+|---|-------|------------------------------------------------------------|---|
+| storage | [CacheStorage](%60CacheStorage%60) | The storage strategy to use for caching. Can be one of: - ParquetCacheStorage: Caches results as Parquet files on disk - SourceStorage: Caches results in the source database - ParquetSnapshot: Creates a snapshot of data in Parquet format - SnapshotStorage: Creates a snapshot in the source database If None, uses the default storage configuration. | `None`  |
+
+#### Returns
+
+| Name | Type                                                  | Description                                              |
+|------|-------------------------------|-----------------------------------|
+|      | [Expr](%60letsql.vendor.ibis.expr.types.core.Expr%60) | A new expression that represents the cached computation. |
+
+#### Notes
+
+The cache method supports two main strategies: 1.
+ModificationTimeStrategy: Tracks changes based on modification time 2.
+SnapshotStrategy: Creates point-in-time snapshots of the data
+
+Each strategy can be combined with either Parquet or database storage.
+
+#### Examples
+
+Using ParquetCacheStorage:
+
+```python
+>>> import letsql as ls
+>>> from letsql.common.caching import ParquetCacheStorage
+>>> from pathlib import Path
+>>> pg = ls.postgres.connect_examples()
+>>> con = ls.connect()
+>>> storage = ParquetCacheStorage(source=con, path=Path.cwd())
+>>> alltypes = pg.table("functional_alltypes")
+>>> cached = (alltypes
+...     .select(alltypes.smallint_col, alltypes.int_col, alltypes.float_col)
+...     .cache(storage=storage))
+```
+
+Using SourceStorage with PostgreSQL:
+
+```python
+>>> from letsql.common.caching import SourceStorage
+>>> from letsql import _
+>>> ddb = ls.duckdb.connect()
+>>> path = ls.config.options.pins.get_path("batting")
+>>> right = (ddb.read_parquet(path, table_name="batting")
+...          .filter(_.yearID == 2014)
+...          .pipe(con.register, table_name="ddb-batting"))
+>>> left = (pg.table("batting")
+...         .filter(_.yearID == 2015)
+...         .pipe(con.register, table_name="pg-batting"))
+>>> # Cache the joined result
+>>> expr = left.join(right, "playerID").cache(SourceStorage(source=pg))
+```
+
+Using cache with filtering:
+
+```python
+>>> cached = alltypes.cache(storage=storage)
+>>> expr = cached.filter([
+...     cached.float_col > 0,
+...     cached.smallint_col > 4,
+...     cached.int_col < cached.float_col * 2
+... ])
+```
+
+#### See Also
+
+ParquetCacheStorage : Storage implementation for Parquet files
+SourceStorage : Storage implementation for database tables
+ModificationTimeStrategy : Strategy for tracking changes by modification
+time SnapshotStrategy : Strategy for creating data snapshots
+
+#### Notes
+
+-   The cache is identified by a unique key based on the computation and
+    strategy
+-   Cache invalidation is handled automatically based on the chosen
+    strategy
+-   Cross-source caching (e.g., from PostgreSQL to DuckDB) is supported
+-   Cache locations can be configured globally through
+    letsql.config.options
+
+### <span id="letsql.vendor.ibis.expr.types.relations.Table.into_backend">into_backend</span>
+
+```python
+into_backend(con, name=None)
+```
+
+Converts the Expr to a table in the given backend `con` with an optional
+table name `name`.
+
+The table is backed by a PyArrow RecordBatchReader, the
+RecordBatchReader is teed so it can safely be reaused without spilling
+to disk.
+
+#### Parameters
+
+| Name | Type | Description                                   | Default    |
+|------|------|-----------------------------------------------|------------|
+| con  |      | The backend where the table should be created | *required* |
+| name |      | The name of the table                         | `None`     |
+
+#### Examples
+
+```python
+>>> import letsql as ls
+>>> from letsql import _
+>>> ls.options.interactive = True
+>>> ls_con = ls.connect()
+>>> pg_con = ls.postgres.connect_examples()
+>>> t = pg_con.table("batting").into_backend(ls_con, "ls_batting")
+>>> expr = (
+...     t.join(t, "playerID")
+...     .order_by("playerID", "yearID")
+...     .limit(15)
+...     .select(player_id="playerID", year_id="yearID_right")
+... )
+>>> expr
+┏━━━━━━━━━━━┳━━━━━━━━━┓
+┃ player_id ┃ year_id ┃
+┡━━━━━━━━━━━╇━━━━━━━━━┩
+│ string    │ int64   │
+├───────────┼─────────┤
+│ aardsda01 │    2015 │
+│ aardsda01 │    2007 │
+│ aardsda01 │    2006 │
+│ aardsda01 │    2009 │
+│ aardsda01 │    2008 │
+│ aardsda01 │    2010 │
+│ aardsda01 │    2004 │
+│ aardsda01 │    2013 │
+│ aardsda01 │    2012 │
+│ aardsda01 │    2006 │
+│ …         │       … │
+└───────────┴─────────┘
+```

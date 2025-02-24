@@ -1,0 +1,1485 @@
+---
+title: Data Functions
+---
+
+# param
+
+```python
+param(type)
+```
+
+Create a deferred parameter of a given type.
+
+#### Parameters
+
+| Name | Type                                                                                                                                                        | Description                                                        | Default    |
+|----|-------------------------------------------|---------------------|-----|
+| type | [Union](%60typing.Union%60)\[[dt](%60letsql.vendor.ibis.expr.datatypes%60).[DataType](%60letsql.vendor.ibis.expr.datatypes.DataType%60), [str](%60str%60)\] | The type of the unbound parameter, e.g., double, int64, date, etc. | *required* |
+
+#### Returns
+
+| Name | Type                                                 | Description                                |
+|-------|-----------------------------------|-------------------------------|
+|      | [Scalar](%60letsql.vendor.ibis.expr.types.Scalar%60) | A scalar expression backend by a parameter |
+
+#### Examples
+
+```python
+>>> from datetime import date
+>>> import letsql
+>>> start = letsql.param("date")
+>>> t = letsql.memtable(
+...     {
+...         "date_col": [date(2013, 1, 1), date(2013, 1, 2), date(2013, 1, 3)],
+...         "value": [1.0, 2.0, 3.0],
+...     },
+... )
+>>> expr = t.filter(t.date_col >= start).value.sum()
+>>> expr.execute(params={start: date(2013, 1, 1)})
+6.0
+>>> expr.execute(params={start: date(2013, 1, 2)})
+5.0
+>>> expr.execute(params={start: date(2013, 1, 3)})
+3.0
+```
+
+# schema
+
+```python
+schema(pairs=None, names=None, types=None)
+```
+
+Validate and return a [`Schema`](./schemas.qmd#ibis.expr.schema.Schema)
+object.
+
+#### Parameters
+
+| Name  | Type                                                                                                                                                                                 | Description                                                                                    | Default |
+|---|-----------------------------------------|------------------------|----|
+| pairs | [SchemaLike](%60letsql.vendor.ibis.expr.schema.SchemaLike%60) \| None                                                                                                                | List or dictionary of name, type pairs. Mutually exclusive with `names` and `types` arguments. | `None`  |
+| names | [Iterable](%60collections.abc.Iterable%60)\[[str](%60str%60)\] \| None                                                                                                               | Field names. Mutually exclusive with `pairs`.                                                  | `None`  |
+| types | [Iterable](%60collections.abc.Iterable%60)\[[str](%60str%60) \| [dt](%60letsql.vendor.ibis.expr.datatypes%60).[DataType](%60letsql.vendor.ibis.expr.datatypes.DataType%60)\] \| None | Field types. Mutually exclusive with `pairs`.                                                  | `None`  |
+
+#### Returns
+
+| Name | Type                                                  | Description    |
+|---------|------------------------------------------------|----------------|
+|      | [Schema](%60letsql.vendor.ibis.expr.schema.Schema%60) | An ibis schema |
+
+#### Examples
+
+```python
+>>> from letsql import schema
+>>> sc = schema([("foo", "string"), ("bar", "int64"), ("baz", "boolean")])
+>>> sc = schema(names=["foo", "bar", "baz"], types=["string", "int64", "boolean"])
+>>> sc = schema(dict(foo="string")) # no-op
+```
+
+# table
+
+```python
+table(schema=None, name=None, catalog=None, database=None)
+```
+
+Create a table literal or an abstract table without data.
+
+Ibis uses the word database to refer to a collection of tables, and the
+word catalog to refer to a collection of databases. You can use a
+combination of `catalog` and `database` to specify a hierarchical
+location for table.
+
+#### Parameters
+
+| Name     | Type                                                                  | Description                                                   | Default |
+|------|-------------------------------|-----------------------------|------|
+| schema   | [SchemaLike](%60letsql.vendor.ibis.expr.schema.SchemaLike%60) \| None | A schema for the table                                        | `None`  |
+| name     | [str](%60str%60) \| None                                              | Name for the table. One is generated if this value is `None`. | `None`  |
+| catalog  | [str](%60str%60) \| None                                              | A collection of database.                                     | `None`  |
+| database | [str](%60str%60) \| None                                              | A collection of tables. Required if catalog is not `None`.    | `None`  |
+
+#### Returns
+
+| Name | Type                                               | Description        |
+|---------|--------------------------------------------|-------------------|
+|      | [Table](%60letsql.vendor.ibis.expr.types.Table%60) | A table expression |
+
+#### Examples
+
+Create a table with no data backing it
+
+```python
+>>> import letsql
+>>> letsql.options.interactive = False
+>>> t = letsql.table(schema=dict(a="int", b="string"), name="t")
+>>> t
+UnboundTable: t
+  a int64
+  b string
+```
+
+Create a table with no data backing it in a specific location
+
+```python
+>>> import letsql
+>>> letsql.options.interactive = False
+>>> t = letsql.table(schema=dict(a="int"), name="t", catalog="cat", database="db")
+>>> t
+UnboundTable: cat.db.t
+  a int64
+```
+
+# memtable
+
+```python
+memtable(data, *, columns=None, schema=None, name=None)
+```
+
+Construct an ibis table expression from in-memory data.
+
+#### Parameters
+
+| Name    | Type                                                                   | Description                                                                                                                                                                                                                                                                                                                                                                                             | Default    |
+|---|-----------|--------------------------------------------------------|---|
+| data    |                                                                        | A table-like object (`pandas.DataFrame`, `pyarrow.Table`, or `polars.DataFrame`), or any data accepted by the `pandas.DataFrame` constructor (e.g. a list of dicts). Note that ibis objects (e.g. `MapValue`) may not be passed in as part of `data` and will result in an error. Do not depend on the underlying storage type (e.g., pyarrow.Table), it’s subject to change across non-major releases. | *required* |
+| columns | [Iterable](%60collections.abc.Iterable%60)\[[str](%60str%60)\] \| None | Optional [](%60typing.Iterable%60) of [](%60str%60) column names. If provided, must match the number of columns in `data`.                                                                                                                                                                                                                                                                              | `None`     |
+| schema  | [SchemaLike](%60letsql.vendor.ibis.expr.schema.SchemaLike%60) \| None  | Optional [`Schema`](./schemas.qmd#ibis.expr.schema.Schema). The functions use `data` to infer a schema if not passed.                                                                                                                                                                                                                                                                                   | `None`     |
+| name    | [str](%60str%60) \| None                                               | Optional name of the table.                                                                                                                                                                                                                                                                                                                                                                             | `None`     |
+
+#### Returns
+
+| Name | Type                                               | Description                                  |
+|-------|----------------------------------|--------------------------------|
+|      | [Table](%60letsql.vendor.ibis.expr.types.Table%60) | A table expression backed by in-memory data. |
+
+#### Examples
+
+```python
+>>> import letsql
+>>> letsql.options.interactive = False
+>>> t = letsql.memtable([{"a": 1}, {"a": 2}])
+>>> t
+InMemoryTable
+  data:
+    PandasDataFrameProxy:
+         a
+      0  1
+      1  2
+```
+
+
+```python
+>>> t = letsql.memtable([{"a": 1, "b": "foo"}, {"a": 2, "b": "baz"}])
+>>> t
+InMemoryTable
+  data:
+    PandasDataFrameProxy:
+         a    b
+      0  1  foo
+      1  2  baz
+```
+
+Create a table literal without column names embedded in the data and
+pass `columns`
+
+```python
+>>> t = letsql.memtable([(1, "foo"), (2, "baz")], columns=["a", "b"])
+>>> t
+InMemoryTable
+  data:
+    PandasDataFrameProxy:
+         a    b
+      0  1  foo
+      1  2  baz
+```
+
+Create a table literal without column names embedded in the data. Ibis
+generates column names if none are provided.
+
+```python
+>>> t = letsql.memtable([(1, "foo"), (2, "baz")])
+>>> t
+InMemoryTable
+  data:
+    PandasDataFrameProxy:
+         col0 col1
+      0     1  foo
+      1     2  baz
+```
+
+# desc
+
+```python
+desc(expr)
+```
+
+Create a descending sort key from `expr` or column name.
+
+#### Parameters
+
+| Name | Type                                                                                                               | Description                                      | Default    |
+|-----|------------------------------------------|---------------------|------|
+| expr | [ir](%60letsql.vendor.ibis.expr.types%60).[Column](%60letsql.vendor.ibis.expr.types.Column%60) \| [str](%60str%60) | The expression or column name to use for sorting | *required* |
+
+## See Also
+
+[`Value.desc()`](./expression-generic.qmd#ibis.expr.types.generic.Value.desc)
+
+#### Examples
+
+```python
+>>> import letsql
+>>> letsql.options.interactive = True
+>>> t = letsql.examples.penguins.fetch()
+>>> t[["species", "year"]].order_by(letsql.desc("year")).head()
+┏━━━━━━━━━┳━━━━━━━┓
+┃ species ┃ year  ┃
+┡━━━━━━━━━╇━━━━━━━┩
+│ string  │ int64 │
+├─────────┼───────┤
+│ Adelie  │  2009 │
+│ Adelie  │  2009 │
+│ Adelie  │  2009 │
+│ Adelie  │  2009 │
+│ Adelie  │  2009 │
+└─────────┴───────┘
+```
+
+#### Returns
+
+| Name | Type                                                                                                 | Description   |
+|------|--------------------------------------------------------|----------|
+|      | [ir](%60letsql.vendor.ibis.expr.types%60).[ValueExpr](%60letsql.vendor.ibis.expr.types.ValueExpr%60) | An expression |
+
+# asc
+
+```python
+asc(expr)
+```
+
+Create an ascending sort key from `asc` or column name.
+
+#### Parameters
+
+| Name | Type                                                                                                               | Description                                      | Default    |
+|-----|------------------------------------------|---------------------|------|
+| expr | [ir](%60letsql.vendor.ibis.expr.types%60).[Column](%60letsql.vendor.ibis.expr.types.Column%60) \| [str](%60str%60) | The expression or column name to use for sorting | *required* |
+
+## See Also
+
+[`Value.asc()`](./expression-generic.qmd#ibis.expr.types.generic.Value.asc)
+
+#### Examples
+
+```python
+>>> import letsql
+>>> letsql.options.interactive = True
+>>> t = letsql.examples.penguins.fetch()
+>>> t[["species", "year"]].order_by(letsql.asc("year")).head()
+┏━━━━━━━━━┳━━━━━━━┓
+┃ species ┃ year  ┃
+┡━━━━━━━━━╇━━━━━━━┩
+│ string  │ int64 │
+├─────────┼───────┤
+│ Adelie  │  2007 │
+│ Adelie  │  2007 │
+│ Adelie  │  2007 │
+│ Adelie  │  2007 │
+│ Adelie  │  2007 │
+└─────────┴───────┘
+```
+
+#### Returns
+
+| Name | Type                                                                                                 | Description   |
+|------|--------------------------------------------------------|----------|
+|      | [ir](%60letsql.vendor.ibis.expr.types%60).[ValueExpr](%60letsql.vendor.ibis.expr.types.ValueExpr%60) | An expression |
+
+# preceding
+
+```python
+preceding(value)
+```
+
+# following
+
+```python
+following(value)
+```
+
+# and\_
+
+```python
+and_(*predicates)
+```
+
+Combine multiple predicates using `&`.
+
+#### Parameters
+
+| Name       | Type                                                                                                       | Description               | Default |
+|-------|----------------------------------------------|--------------|------|
+| predicates | [ir](%60letsql.vendor.ibis.expr.types%60).[BooleanValue](%60letsql.vendor.ibis.expr.types.BooleanValue%60) | Boolean value expressions | `()`    |
+
+#### Returns
+
+| Name | Type                               | Description                                                                                                                |
+|-----|---------------|-----------------------------------------------------|
+|      | [BooleanValue](%60BooleanValue%60) | A new predicate that evaluates to True if all composing predicates are True. If no predicates were provided, returns True. |
+
+# or\_
+
+```python
+or_(*predicates)
+```
+
+Combine multiple predicates using `|`.
+
+#### Parameters
+
+| Name       | Type                                                                                                       | Description               | Default |
+|-------|----------------------------------------------|--------------|------|
+| predicates | [ir](%60letsql.vendor.ibis.expr.types%60).[BooleanValue](%60letsql.vendor.ibis.expr.types.BooleanValue%60) | Boolean value expressions | `()`    |
+
+#### Returns
+
+| Name | Type                               | Description                                                                                                                 |
+|-----|---------------|-----------------------------------------------------|
+|      | [BooleanValue](%60BooleanValue%60) | A new predicate that evaluates to True if any composing predicates are True. If no predicates were provided, returns False. |
+
+# random
+
+```python
+random()
+```
+
+Return a random floating point number in the range \[0.0, 1.0).
+
+Similar to [](%60random.random%60) in the Python standard library.
+
+`ibis.random()` will generate a column of distinct random numbers even
+if the same instance of `ibis.random()` is reused.
+
+When Ibis compiles an expression to SQL, each place where `random` is
+used will render as a separate call to the given backend’s random number
+generator.
+
+>>> import letsql r_a = letsql.random() \# doctest: +SKIP
+
+#### Returns
+
+| Name | Type                                   | Description                   |
+|---------|----------------------------------|------------------------------|
+|      | [FloatingScalar](%60FloatingScalar%60) | Random float value expression |
+
+# uuid
+
+```python
+uuid()
+```
+
+Return a random UUID version 4 value.
+
+Similar to \[(’uuid.uuid4\`) in the Python standard library.
+
+#### Examples
+
+```python
+>>> import letsql
+>>> letsql.options.interactive = True
+>>> letsql.uuid()
+UUID('e57e927b-aed2-483b-9140-dc32a26cad95')
+```
+
+#### Returns
+
+| Name | Type                           | Description                  |
+|------|--------------------------------|------------------------------|
+|      | [UUIDScalar](%60UUIDScalar%60) | Random UUID value expression |
+
+# case
+
+```python
+case()
+```
+
+Begin constructing a case expression.
+
+Use the `.when` method on the resulting object followed by `.end` to
+create a complete case expression.
+
+#### Returns
+
+| Name | Type                                             | Description                                                 |
+|------|-----------------------------|--------------------------------------|
+|      | [SearchedCaseBuilder](%60SearchedCaseBuilder%60) | A builder object to use for constructing a case expression. |
+
+## See Also
+
+[`Value.case()`](./expression-generic.qmd#ibis.expr.types.generic.Value.case)
+
+#### Examples
+
+```python
+>>> import letsql
+>>> from letsql.vendor.ibis import _
+>>> letsql.options.interactive = True
+>>> t = letsql.memtable(
+...     {
+...         "left": [1, 2, 3, 4],
+...         "symbol": ["+", "-", "*", "/"],
+...         "right": [5, 6, 7, 8],
+...     }
+... )
+>>> t.mutate(
+...     result=(
+...         letsql.case()
+...         .when(_.symbol == "+", _.left + _.right)
+...         .when(_.symbol == "-", _.left - _.right)
+...         .when(_.symbol == "*", _.left * _.right)
+...         .when(_.symbol == "/", _.left / _.right)
+...         .end()
+...     )
+... )
+┏━━━━━━━┳━━━━━━━━┳━━━━━━━┳━━━━━━━━━┓
+┃ left  ┃ symbol ┃ right ┃ result  ┃
+┡━━━━━━━╇━━━━━━━━╇━━━━━━━╇━━━━━━━━━┩
+│ int64 │ string │ int64 │ float64 │
+├───────┼────────┼───────┼─────────┤
+│     1 │ +      │     5 │     6.0 │
+│     2 │ -      │     6 │    -4.0 │
+│     3 │ *      │     7 │    21.0 │
+│     4 │ /      │     8 │     0.5 │
+└───────┴────────┴───────┴─────────┘
+```
+
+# now
+
+```python
+now()
+```
+
+Return an expression that will compute the current timestamp.
+
+#### Returns
+
+| Name | Type                                     | Description                                       |
+|-------|----------------------------|-------------------------------------|
+|      | [TimestampScalar](%60TimestampScalar%60) | An expression representing the current timestamp. |
+
+# today
+
+```python
+today()
+```
+
+Return an expression that will compute the current date.
+
+#### Returns
+
+| Name | Type                           | Description                                  |
+|--------|-------------------------|----------------------------------------|
+|      | [DateScalar](%60DateScalar%60) | An expression representing the current date. |
+
+# rank
+
+```python
+rank()
+```
+
+Compute position of first element within each equal-value group in
+sorted order.
+
+Equivalent to SQL’s `RANK()` window function.
+
+#### Returns
+
+| Name | Type                             | Description  |
+|------|----------------------------------|--------------|
+|      | [Int64Column](%60Int64Column%60) | The min rank |
+
+#### Examples
+
+```python
+>>> import letsql
+>>> letsql.options.interactive = True
+>>> t = letsql.memtable({"values": [1, 2, 1, 2, 3, 2]})
+>>> t.mutate(rank=letsql.rank().over(order_by=t.values))
+┏━━━━━━━━┳━━━━━━━┓
+┃ values ┃ rank  ┃
+┡━━━━━━━━╇━━━━━━━┩
+│ int64  │ int64 │
+├────────┼───────┤
+│      1 │     0 │
+│      1 │     0 │
+│      2 │     2 │
+│      2 │     2 │
+│      2 │     2 │
+│      3 │     5 │
+└────────┴───────┘
+```
+
+# dense_rank
+
+```python
+dense_rank()
+```
+
+Position of first element within each group of equal values.
+
+Values are returned in sorted order and duplicate values are ignored.
+
+Equivalent to SQL’s `DENSE_RANK()`.
+
+#### Returns
+
+| Name | Type                                 | Description |
+|------|--------------------------------------|-------------|
+|      | [IntegerColumn](%60IntegerColumn%60) | The rank    |
+
+#### Examples
+
+```python
+>>> import letsql
+>>> letsql.options.interactive = True
+>>> t = letsql.memtable({"values": [1, 2, 1, 2, 3, 2]})
+>>> t.mutate(rank=letsql.dense_rank().over(order_by=t.values))
+┏━━━━━━━━┳━━━━━━━┓
+┃ values ┃ rank  ┃
+┡━━━━━━━━╇━━━━━━━┩
+│ int64  │ int64 │
+├────────┼───────┤
+│      1 │     0 │
+│      1 │     0 │
+│      2 │     1 │
+│      2 │     1 │
+│      2 │     1 │
+│      3 │     2 │
+└────────┴───────┘
+```
+
+# percent_rank
+
+```python
+percent_rank()
+```
+
+Return the relative rank of the values in the column.
+
+#### Returns
+
+| Name | Type                                   | Description      |
+|------|----------------------------------------|------------------|
+|      | [FloatingColumn](%60FloatingColumn%60) | The percent rank |
+
+#### Examples
+
+```python
+>>> import letsql
+>>> letsql.options.interactive = True
+>>> t = letsql.memtable({"values": [1, 2, 1, 2, 3, 2]})
+>>> t.mutate(pct_rank=letsql.percent_rank().over(order_by=t.values))
+┏━━━━━━━━┳━━━━━━━━━━┓
+┃ values ┃ pct_rank ┃
+┡━━━━━━━━╇━━━━━━━━━━┩
+│ int64  │ float64  │
+├────────┼──────────┤
+│      1 │      0.0 │
+│      1 │      0.0 │
+│      2 │      0.4 │
+│      2 │      0.4 │
+│      2 │      0.4 │
+│      3 │      1.0 │
+└────────┴──────────┘
+```
+
+# cume_dist
+
+```python
+cume_dist()
+```
+
+Return the cumulative distribution over a window.
+
+#### Returns
+
+| Name | Type                                   | Description                 |
+|---------|-----------------------------------|-----------------------------|
+|      | [FloatingColumn](%60FloatingColumn%60) | The cumulative distribution |
+
+#### Examples
+
+```python
+>>> import letsql
+>>> letsql.options.interactive = True
+>>> t = letsql.memtable({"values": [1, 2, 1, 2, 3, 2]})
+>>> t.mutate(dist=letsql.cume_dist().over(order_by=t.values))
+┏━━━━━━━━┳━━━━━━━━━━┓
+┃ values ┃ dist     ┃
+┡━━━━━━━━╇━━━━━━━━━━┩
+│ int64  │ float64  │
+├────────┼──────────┤
+│      1 │ 0.333333 │
+│      1 │ 0.333333 │
+│      2 │ 0.833333 │
+│      2 │ 0.833333 │
+│      2 │ 0.833333 │
+│      3 │ 1.000000 │
+└────────┴──────────┘
+```
+
+# ntile
+
+```python
+ntile(buckets)
+```
+
+Return the integer number of a partitioning of the column values.
+
+#### Parameters
+
+| Name    | Type                                                                                                                           | Description                         | Default    |
+|-----|----------------------------------------------|----------------|------|
+| buckets | [int](%60int%60) \| [ir](%60letsql.vendor.ibis.expr.types%60).[IntegerValue](%60letsql.vendor.ibis.expr.types.IntegerValue%60) | Number of buckets to partition into | *required* |
+
+#### Examples
+
+```python
+>>> import letsql
+>>> letsql.options.interactive = True
+>>> t = letsql.memtable({"values": [1, 2, 1, 2, 3, 2]})
+>>> t.mutate(ntile=letsql.ntile(2).over(order_by=t.values))
+┏━━━━━━━━┳━━━━━━━┓
+┃ values ┃ ntile ┃
+┡━━━━━━━━╇━━━━━━━┩
+│ int64  │ int64 │
+├────────┼───────┤
+│      1 │     0 │
+│      1 │     0 │
+│      2 │     0 │
+│      2 │     1 │
+│      2 │     1 │
+│      3 │     1 │
+└────────┴───────┘
+```
+
+# row_number
+
+```python
+row_number()
+```
+
+Return an analytic function expression for the current row number.
+
+<Note>
+
+`row_number` is normalized across backends to start at 0
+
+</Note>
+
+#### Returns
+
+| Name | Type                                 | Description                          |
+|--------|------------------------------|----------------------------------|
+|      | [IntegerColumn](%60IntegerColumn%60) | A column expression enumerating rows |
+
+#### Examples
+
+```python
+>>> import letsql
+>>> letsql.options.interactive = True
+>>> t = letsql.memtable({"values": [1, 2, 1, 2, 3, 2]})
+>>> t.mutate(rownum=letsql.row_number())
+┏━━━━━━━━┳━━━━━━━━┓
+┃ values ┃ rownum ┃
+┡━━━━━━━━╇━━━━━━━━┩
+│ int64  │ int64  │
+├────────┼────────┤
+│      1 │      0 │
+│      2 │      1 │
+│      1 │      2 │
+│      2 │      3 │
+│      3 │      4 │
+│      2 │      5 │
+└────────┴────────┘
+```
+
+# read_csv
+
+```python
+read_csv(sources, table_name=None, **kwargs)
+```
+
+Lazily load a CSV or set of CSVs.
+
+This function delegates to the `read_csv` method on the current default
+backend (DuckDB or `ibis.config.default_backend`).
+
+#### Parameters
+
+| Name       | Type                                                                                                                                           | Description                                                                                                                                                                           | Default    |
+|----|---------------------------|---------------------------------------|----|
+| sources    | [str](%60str%60) \| [Path](%60pathlib.Path%60) \| [Sequence](%60collections.abc.Sequence%60)\[[str](%60str%60) \| [Path](%60pathlib.Path%60)\] | A filesystem path or URL or list of same. Supports CSV and TSV files.                                                                                                                 | *required* |
+| table_name | [str](%60str%60) \| None                                                                                                                       | A name to refer to the table. If not provided, a name will be generated.                                                                                                              | `None`     |
+| kwargs     | [Any](%60typing.Any%60)                                                                                                                        | Backend-specific keyword arguments for the file type. For the DuckDB backend used by default, please refer to: \* CSV/TSV: https://duckdb.org/docs/data/csv/overview.html#parameters. | `{}`       |
+
+#### Returns
+
+| Name | Type                                                                                         | Description                          |
+|------|----------------------------------------------|---------------------|
+|      | [ir](%60letsql.vendor.ibis.expr.types%60).[Table](%60letsql.vendor.ibis.expr.types.Table%60) | Table expression representing a file |
+
+#### Examples
+
+```python
+>>> import letsql
+>>> letsql.options.interactive = True
+>>> lines = '''a,b
+... 1,d
+... 2,
+... ,f
+... '''
+>>> with open("/tmp/lines.csv", mode="w") as f:
+...     nbytes = f.write(lines)  # nbytes is unused
+>>> t = letsql.read_csv("/tmp/lines.csv")
+>>> t
+┏━━━━━━━┳━━━━━━━━┓
+┃ a     ┃ b      ┃
+┡━━━━━━━╇━━━━━━━━┩
+│ int64 │ string │
+├───────┼────────┤
+│     1 │ d      │
+│     2 │ NULL   │
+│  NULL │ f      │
+└───────┴────────┘
+```
+
+# read_parquet
+
+```python
+read_parquet(sources, table_name=None, **kwargs)
+```
+
+Lazily load a parquet file or set of parquet files.
+
+This function delegates to the `read_parquet` method on the current
+default backend (DuckDB or `ibis.config.default_backend`).
+
+#### Parameters
+
+| Name       | Type                                                                                                                                           | Description                                                                                                                                                     | Default    |
+|----|----------------------------|------------------------------------|----|
+| sources    | [str](%60str%60) \| [Path](%60pathlib.Path%60) \| [Sequence](%60collections.abc.Sequence%60)\[[str](%60str%60) \| [Path](%60pathlib.Path%60)\] | A filesystem path or URL or list of same.                                                                                                                       | *required* |
+| table_name | [str](%60str%60) \| None                                                                                                                       | A name to refer to the table. If not provided, a name will be generated.                                                                                        | `None`     |
+| kwargs     | [Any](%60typing.Any%60)                                                                                                                        | Backend-specific keyword arguments for the file type. For the DuckDB backend used by default, please refer to: \* Parquet: https://duckdb.org/docs/data/parquet | `{}`       |
+
+#### Returns
+
+| Name | Type                                                                                         | Description                          |
+|------|----------------------------------------------|---------------------|
+|      | [ir](%60letsql.vendor.ibis.expr.types%60).[Table](%60letsql.vendor.ibis.expr.types.Table%60) | Table expression representing a file |
+
+#### Examples
+
+```python
+>>> import letsql
+>>> import pandas as pd
+>>> letsql.options.interactive = True
+>>> df = pd.DataFrame({"a": [1, 2, 3], "b": list("ghi")})
+>>> df
+   a  b
+0  1  g
+1  2  h
+2  3  i
+>>> df.to_parquet("/tmp/data.parquet")
+>>> t = letsql.read_parquet("/tmp/data.parquet")
+>>> t
+┏━━━━━━━┳━━━━━━━━┓
+┃ a     ┃ b      ┃
+┡━━━━━━━╇━━━━━━━━┩
+│ int64 │ string │
+├───────┼────────┤
+│     1 │ g      │
+│     2 │ h      │
+│     3 │ i      │
+└───────┴────────┘
+```
+
+# register
+
+```python
+register(source, table_name=None, **kwargs)
+```
+
+# read_postgres
+
+```python
+read_postgres(uri, table_name=None, **kwargs)
+```
+
+# read_sqlite
+
+```python
+read_sqlite(path, *, table_name=None)
+```
+
+# union
+
+```python
+union(table, *rest, distinct=False)
+```
+
+Compute the set union of multiple table expressions.
+
+The input tables must have identical schemas.
+
+#### Parameters
+
+| Name     | Type                                                                                         | Description                  | Default    |
+|------|-------------------------------------------|----------------|-------|
+| table    | [ir](%60letsql.vendor.ibis.expr.types%60).[Table](%60letsql.vendor.ibis.expr.types.Table%60) | A table expression           | *required* |
+| \*rest   | [ir](%60letsql.vendor.ibis.expr.types%60).[Table](%60letsql.vendor.ibis.expr.types.Table%60) | Additional table expressions | `()`       |
+| distinct | [bool](%60bool%60)                                                                           | Only return distinct rows    | `False`    |
+
+#### Returns
+
+| Name | Type                                               | Description                                           |
+|------|-------------------------------|-----------------------------------|
+|      | [Table](%60letsql.vendor.ibis.expr.types.Table%60) | A new table containing the union of all input tables. |
+
+#### Examples
+
+```python
+>>> import letsql
+>>> letsql.options.interactive = True
+>>> t1 = letsql.memtable({"a": [1, 2]})
+>>> t1
+┏━━━━━━━┓
+┃ a     ┃
+┡━━━━━━━┩
+│ int64 │
+├───────┤
+│     1 │
+│     2 │
+└───────┘
+>>> t2 = letsql.memtable({"a": [2, 3]})
+>>> t2
+┏━━━━━━━┓
+┃ a     ┃
+┡━━━━━━━┩
+│ int64 │
+├───────┤
+│     2 │
+│     3 │
+└───────┘
+>>> letsql.union(t1, t2)  # union all by default
+┏━━━━━━━┓
+┃ a     ┃
+┡━━━━━━━┩
+│ int64 │
+├───────┤
+│     1 │
+│     2 │
+│     2 │
+│     3 │
+└───────┘
+>>> letsql.union(t1, t2, distinct=True).order_by("a")
+┏━━━━━━━┓
+┃ a     ┃
+┡━━━━━━━┩
+│ int64 │
+├───────┤
+│     1 │
+│     2 │
+│     3 │
+└───────┘
+```
+
+# intersect
+
+```python
+intersect(table, *rest, distinct=True)
+```
+
+Compute the set intersection of multiple table expressions.
+
+The input tables must have identical schemas.
+
+#### Parameters
+
+| Name     | Type                                                                                         | Description                  | Default    |
+|------|-------------------------------------------|----------------|-------|
+| table    | [ir](%60letsql.vendor.ibis.expr.types%60).[Table](%60letsql.vendor.ibis.expr.types.Table%60) | A table expression           | *required* |
+| \*rest   | [ir](%60letsql.vendor.ibis.expr.types%60).[Table](%60letsql.vendor.ibis.expr.types.Table%60) | Additional table expressions | `()`       |
+| distinct | [bool](%60bool%60)                                                                           | Only return distinct rows    | `True`     |
+
+#### Returns
+
+| Name | Type                                               | Description                                                  |
+|------|-----------------------------|-------------------------------------|
+|      | [Table](%60letsql.vendor.ibis.expr.types.Table%60) | A new table containing the intersection of all input tables. |
+
+#### Examples
+
+```python
+>>> import letsql
+>>> letsql.options.interactive = True
+>>> t1 = letsql.memtable({"a": [1, 2]})
+>>> t1
+┏━━━━━━━┓
+┃ a     ┃
+┡━━━━━━━┩
+│ int64 │
+├───────┤
+│     1 │
+│     2 │
+└───────┘
+>>> t2 = letsql.memtable({"a": [2, 3]})
+>>> t2
+┏━━━━━━━┓
+┃ a     ┃
+┡━━━━━━━┩
+│ int64 │
+├───────┤
+│     2 │
+│     3 │
+└───────┘
+>>> letsql.intersect(t1, t2)
+┏━━━━━━━┓
+┃ a     ┃
+┡━━━━━━━┩
+│ int64 │
+├───────┤
+│     2 │
+└───────┘
+```
+
+# difference
+
+```python
+difference(table, *rest, distinct=True)
+```
+
+Compute the set difference of multiple table expressions.
+
+The input tables must have identical schemas.
+
+#### Parameters
+
+| Name     | Type                                                                                         | Description                                                | Default    |
+|-----|------------------------------------|-------------------------|------|
+| table    | [ir](%60letsql.vendor.ibis.expr.types%60).[Table](%60letsql.vendor.ibis.expr.types.Table%60) | A table expression                                         | *required* |
+| \*rest   | [ir](%60letsql.vendor.ibis.expr.types%60).[Table](%60letsql.vendor.ibis.expr.types.Table%60) | Additional table expressions                               | `()`       |
+| distinct | [bool](%60bool%60)                                                                           | Only diff distinct rows not occurring in the calling table | `True`     |
+
+#### Returns
+
+| Name | Type                                               | Description                                                  |
+|------|-----------------------------|-------------------------------------|
+|      | [Table](%60letsql.vendor.ibis.expr.types.Table%60) | The rows present in `self` that are not present in `tables`. |
+
+#### Examples
+
+```python
+>>> import letsql
+>>> letsql.options.interactive = True
+>>> t1 = letsql.memtable({"a": [1, 2]})
+>>> t1
+┏━━━━━━━┓
+┃ a     ┃
+┡━━━━━━━┩
+│ int64 │
+├───────┤
+│     1 │
+│     2 │
+└───────┘
+>>> t2 = letsql.memtable({"a": [2, 3]})
+>>> t2
+┏━━━━━━━┓
+┃ a     ┃
+┡━━━━━━━┩
+│ int64 │
+├───────┤
+│     2 │
+│     3 │
+└───────┘
+>>> letsql.difference(t1, t2)
+┏━━━━━━━┓
+┃ a     ┃
+┡━━━━━━━┩
+│ int64 │
+├───────┤
+│     1 │
+└───────┘
+```
+
+# ifelse
+
+```python
+ifelse(condition, true_expr, false_expr)
+```
+
+Construct a ternary conditional expression.
+
+#### Parameters
+
+| Name       | Type                    | Description                                                        | Default    |
+|---------|--------------|------------------------------------------|---------|
+| condition  | [Any](%60typing.Any%60) | A boolean expression                                               | *required* |
+| true_expr  | [Any](%60typing.Any%60) | Expression to return if `condition` evaluates to `True`            | *required* |
+| false_expr | [Any](%60typing.Any%60) | Expression to return if `condition` evaluates to `False` or `NULL` | *required* |
+
+#### Returns
+
+| Name  | Type                                                                                         | Description                                                         |
+|-----|-------------------------------------|------------------------------|
+| Value | [ir](%60letsql.vendor.ibis.expr.types%60).[Value](%60letsql.vendor.ibis.expr.types.Value%60) | The value of `true_expr` if `condition` is `True` else `false_expr` |
+
+## See Also
+
+[`BooleanValue.ifelse()`](./expression-numeric.qmd#ibis.expr.types.logical.BooleanValue.ifelse)
+
+#### Examples
+
+```python
+>>> import letsql
+>>> letsql.options.interactive = True
+>>> t = letsql.memtable({"condition": [True, False, True, None]})
+>>> letsql.ifelse(t.condition, "yes", "no")
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ IfElse(condition, 'yes', 'no') ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ string                         │
+├────────────────────────────────┤
+│ yes                            │
+│ no                             │
+│ yes                            │
+│ no                             │
+└────────────────────────────────┘
+```
+
+# coalesce
+
+```python
+coalesce(*args)
+```
+
+Return the first non-null value from `args`.
+
+#### Parameters
+
+| Name | Type                    | Description                                             | Default |
+|-------|----------------|-----------------------------------------|---------|
+| args | [Any](%60typing.Any%60) | Arguments from which to choose the first non-null value | `()`    |
+
+#### Returns
+
+| Name | Type                                               | Description          |
+|--------|-------------------------------------------|---------------------|
+|      | [Value](%60letsql.vendor.ibis.expr.types.Value%60) | Coalesced expression |
+
+## See Also
+
+[`Value.coalesce()`](#ibis.expr.types.generic.Value.coalesce)
+[`Value.fill_null()`](#ibis.expr.types.generic.Value.fill_null)
+
+#### Examples
+
+```python
+>>> import letsql
+>>> letsql.options.interactive = True
+>>> letsql.coalesce(None, 4, 5)
+4
+```
+
+# greatest
+
+```python
+greatest(*args)
+```
+
+Compute the largest value among the supplied arguments.
+
+#### Parameters
+
+| Name | Type                    | Description              | Default |
+|------|-------------------------|--------------------------|---------|
+| args | [Any](%60typing.Any%60) | Arguments to choose from | `()`    |
+
+#### Returns
+
+| Name | Type                                               | Description                     |
+|--------|--------------------------------------|---------------------------|
+|      | [Value](%60letsql.vendor.ibis.expr.types.Value%60) | Maximum of the passed arguments |
+
+#### Examples
+
+```python
+>>> import letsql
+>>> letsql.options.interactive = True
+>>> letsql.greatest(None, 4, 5)
+5
+```
+
+# least
+
+```python
+least(*args)
+```
+
+Compute the smallest value among the supplied arguments.
+
+#### Parameters
+
+| Name | Type                    | Description              | Default |
+|------|-------------------------|--------------------------|---------|
+| args | [Any](%60typing.Any%60) | Arguments to choose from | `()`    |
+
+#### Returns
+
+| Name | Type                                               | Description                     |
+|--------|--------------------------------------|---------------------------|
+|      | [Value](%60letsql.vendor.ibis.expr.types.Value%60) | Minimum of the passed arguments |
+
+#### Examples
+
+```python
+>>> import letsql
+>>> letsql.options.interactive = True
+>>> letsql.least(None, 4, 5)
+4
+```
+
+# range
+
+```python
+range(start, stop, step)
+```
+
+Generate a range of values.
+
+Integer ranges are supported, as well as timestamp ranges.
+
+<Note>
+
+`start` is inclusive and `stop` is exclusive, just like Python’s builtin
+[range](range).
+
+When `step` equals 0, however, this function will return an empty array.
+
+Python’s `range` will raise an exception when `step` is zero.
+
+</Note>
+
+#### Parameters
+
+| Name  | Type | Description                          | Default    |
+|-------|------|--------------------------------------|------------|
+| start |      | Lower bound of the range, inclusive. | *required* |
+| stop  |      | Upper bound of the range, exclusive. | *required* |
+| step  |      | Step value. Optional, defaults to 1. | *required* |
+
+#### Returns
+
+| Name | Type                           | Description        |
+|------|--------------------------------|--------------------|
+|      | [ArrayValue](%60ArrayValue%60) | An array of values |
+
+#### Examples
+
+```python
+>>> import letsql
+>>> letsql.options.interactive = True
+```
+
+Range using only a stop argument
+
+```python
+>>> letsql.range(5)
+[0, 1, ... +3]
+```
+
+Simple range using start and stop
+
+```python
+>>> letsql.range(1, 5)
+[1, 2, ... +2]
+```
+
+Generate an empty range
+
+```python
+>>> letsql.range(0)
+[]
+```
+
+Negative step values are supported
+
+```python
+>>> letsql.range(10, 4, -2)
+[10, 8, ... +1]
+```
+
+`ibis.range` behaves the same as Python’s range …
+
+```python
+>>> letsql.range(0, 7, -1)
+[]
+```
+
+… except when the step is zero, in which case `ibis.range` returns an
+empty array
+
+```python
+>>> letsql.range(0, 5, 0)
+[]
+```
+
+Because the resulting expression is array, you can unnest the values
+
+```python
+>>> letsql.range(5).unnest().name("numbers")
+┏━━━━━━━━━┓
+┃ numbers ┃
+┡━━━━━━━━━┩
+│ int8    │
+├─────────┤
+│       0 │
+│       1 │
+│       2 │
+│       3 │
+│       4 │
+└─────────┘
+```
+
+# timestamp
+
+```python
+timestamp(
+    value_or_year,
+    month=None,
+    day=None,
+    hour=None,
+    minute=None,
+    second=None,
+    /,
+    timezone=None,
+)
+```
+
+Construct a timestamp scalar or column.
+
+#### Parameters
+
+| Name          | Type | Description                                                                                                                            | Default    |
+|-------|-----|-------------------------------------------------------|------|
+| value_or_year |      | Either a string value or `datetime.datetime` to coerce to a timestamp, or an integral value representing the timestamp year component. | *required* |
+| month         |      | The timestamp month component; required if `value_or_year` is a year.                                                                  | `None`     |
+| day           |      | The timestamp day component; required if `value_or_year` is a year.                                                                    | `None`     |
+| hour          |      | The timestamp hour component; required if `value_or_year` is a year.                                                                   | `None`     |
+| minute        |      | The timestamp minute component; required if `value_or_year` is a year.                                                                 | `None`     |
+| second        |      | The timestamp second component; required if `value_or_year` is a year.                                                                 | `None`     |
+| timezone      |      | The timezone name, or none for a timezone-naive timestamp.                                                                             | `None`     |
+
+#### Returns
+
+| Name | Type                                                                 | Description            |
+|-------|-----------------------------------------------|------------------|
+|      | [TimestampValue](%60letsql.vendor.ibis.expr.types.TimestampValue%60) | A timestamp expression |
+
+#### Examples
+
+```python
+>>> import letsql
+>>> letsql.options.interactive = True
+```
+
+Create a timestamp scalar from a string
+
+```python
+>>> letsql.timestamp("2023-01-02T03:04:05")
+Timestamp('2023-01-02 03:04:05')
+```
+
+Create a timestamp scalar from components
+
+```python
+>>> letsql.timestamp(2023, 1, 2, 3, 4, 5)
+Timestamp('2023-01-02 03:04:05')
+```
+
+Create a timestamp column from components
+
+```python
+>>> t = letsql.memtable({"y": [2001, 2002], "m": [1, 4], "d": [2, 5], "h": [3, 6]})
+>>> letsql.timestamp(t.y, t.m, t.d, t.h, 0, 0).name("timestamp")
+┏━━━━━━━━━━━━━━━━━━━━━┓
+┃ timestamp           ┃
+┡━━━━━━━━━━━━━━━━━━━━━┩
+│ timestamp           │
+├─────────────────────┤
+│ 2001-01-02 03:00:00 │
+│ 2002-04-05 06:00:00 │
+└─────────────────────┘
+```
+
+# date
+
+```python
+date(value_or_year, month=None, day=None, /)
+```
+
+# time
+
+```python
+time(value_or_hour, minute=None, second=None, /)
+```
+
+Return a time literal if `value` is coercible to a time.
+
+#### Parameters
+
+| Name          | Type | Description                                                                                                              | Default    |
+|--------|-----|------------------------------------------------------|-------|
+| value_or_hour |      | Either a string value or `datetime.time` to coerce to a time, or an integral value representing the time hour component. | *required* |
+| minute        |      | The time minute component; required if `value_or_hour` is an hour.                                                       | `None`     |
+| second        |      | The time second component; required if `value_or_hour` is an hour.                                                       | `None`     |
+
+#### Returns
+
+| Name | Type                                                       | Description       |
+|--------|-----------------------------------------------|-----------------|
+|      | [TimeValue](%60letsql.vendor.ibis.expr.types.TimeValue%60) | A time expression |
+
+#### Examples
+
+```python
+>>> import letsql
+>>> letsql.options.interactive = True
+```
+
+Create a time scalar from a string
+
+```python
+>>> letsql.time("01:02:03")
+datetime.time(1, 2, 3)
+```
+
+Create a time scalar from hour, minute, and second
+
+```python
+>>> letsql.time(1, 2, 3)
+datetime.time(1, 2, 3)
+```
+
+Create a time column from hour, minute, and second
+
+```python
+>>> t = letsql.memtable({"h": [1, 4], "m": [2, 5], "s": [3, 6]})
+>>> letsql.time(t.h, t.m, t.s).name("time")
+┏━━━━━━━━━━┓
+┃ time     ┃
+┡━━━━━━━━━━┩
+│ time     │
+├──────────┤
+│ 01:02:03 │
+│ 04:05:06 │
+└──────────┘
+```
+
+# interval
+
+```python
+interval(
+    value=None,
+    unit='s',
+    *,
+    years=None,
+    quarters=None,
+    months=None,
+    weeks=None,
+    days=None,
+    hours=None,
+    minutes=None,
+    seconds=None,
+    milliseconds=None,
+    microseconds=None,
+    nanoseconds=None,
+)
+```
+
+Return an interval literal expression.
+
+#### Parameters
+
+| Name         | Type                                                                                         | Description            | Default |
+|---------|-------------------------------------------|--------------|-------|
+| value        | [int](%60int%60) \| [datetime](%60datetime%60).[timedelta](%60datetime.timedelta%60) \| None | Interval value.        | `None`  |
+| unit         | [str](%60str%60)                                                                             | Unit of `value`        | `'s'`   |
+| years        | [int](%60int%60) \| None                                                                     | Number of years        | `None`  |
+| quarters     | [int](%60int%60) \| None                                                                     | Number of quarters     | `None`  |
+| months       | [int](%60int%60) \| None                                                                     | Number of months       | `None`  |
+| weeks        | [int](%60int%60) \| None                                                                     | Number of weeks        | `None`  |
+| days         | [int](%60int%60) \| None                                                                     | Number of days         | `None`  |
+| hours        | [int](%60int%60) \| None                                                                     | Number of hours        | `None`  |
+| minutes      | [int](%60int%60) \| None                                                                     | Number of minutes      | `None`  |
+| seconds      | [int](%60int%60) \| None                                                                     | Number of seconds      | `None`  |
+| milliseconds | [int](%60int%60) \| None                                                                     | Number of milliseconds | `None`  |
+| microseconds | [int](%60int%60) \| None                                                                     | Number of microseconds | `None`  |
+| nanoseconds  | [int](%60int%60) \| None                                                                     | Number of nanoseconds  | `None`  |
+
+#### Returns
+
+| Name | Type                                   | Description            |
+|------|----------------------------------------|------------------------|
+|      | [IntervalScalar](%60IntervalScalar%60) | An interval expression |
+
+# to_sql
+
+```python
+to_sql(expr, pretty=True)
+```
+
+Return the formatted SQL string for an expression.
+
+#### Parameters
+
+| Name   | Type                                                                                       | Description                       | Default    |
+|-----|------------------------------------------|------------------|-------|
+| expr   | [ir](%60letsql.vendor.ibis.expr.types%60).[Expr](%60letsql.vendor.ibis.expr.types.Expr%60) | Ibis expression.                  | *required* |
+| pretty | [bool](%60bool%60)                                                                         | Whether to use pretty formatting. | `True`     |
+
+#### Returns
+
+| Name | Type             | Description          |
+|------|------------------|----------------------|
+|      | [str](%60str%60) | Formatted SQL string |
+
+# execute
+
+```python
+execute(expr, **kwargs)
+```
+
+# to_pyarrow_batches
+
+```python
+to_pyarrow_batches(expr, *, chunk_size=1000000, **kwargs)
+```
+
+# to_pyarrow
+
+```python
+to_pyarrow(expr, **kwargs)
+```
+
+# to_parquet
+
+```python
+to_parquet(expr, path, params=None, **kwargs)
+```
+
+# get_plans
+
+```python
+get_plans(expr)
+```

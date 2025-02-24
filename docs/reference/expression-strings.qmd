@@ -1,0 +1,1396 @@
+# String expressions
+
+All string operations are valid for both scalars and columns.
+
+# StringValue { #letsql.vendor.ibis.expr.types.strings.StringValue }
+
+```python
+StringValue(self, arg)
+```
+
+
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [ascii_str](#letsql.vendor.ibis.expr.types.strings.StringValue.ascii_str) | Return the numeric ASCII code of the first character of a string. |
+| [authority](#letsql.vendor.ibis.expr.types.strings.StringValue.authority) | Parse a URL and extract authority. |
+| [capitalize](#letsql.vendor.ibis.expr.types.strings.StringValue.capitalize) | Uppercase the first letter, lowercase the rest. |
+| [concat](#letsql.vendor.ibis.expr.types.strings.StringValue.concat) | Concatenate strings. |
+| [contains](#letsql.vendor.ibis.expr.types.strings.StringValue.contains) | Return whether the expression contains `substr`. |
+| [endswith](#letsql.vendor.ibis.expr.types.strings.StringValue.endswith) | Determine if `self` ends with `end`. |
+| [find](#letsql.vendor.ibis.expr.types.strings.StringValue.find) | Return the position of the first occurrence of substring. |
+| [find_in_set](#letsql.vendor.ibis.expr.types.strings.StringValue.find_in_set) | Find the first occurrence of `str_list` within a list of strings. |
+| [fragment](#letsql.vendor.ibis.expr.types.strings.StringValue.fragment) | Parse a URL and extract fragment identifier. |
+| [host](#letsql.vendor.ibis.expr.types.strings.StringValue.host) | Parse a URL and extract host. |
+| [length](#letsql.vendor.ibis.expr.types.strings.StringValue.length) | Compute the length of a string. |
+| [levenshtein](#letsql.vendor.ibis.expr.types.strings.StringValue.levenshtein) | Return the Levenshtein distance between two strings. |
+| [lower](#letsql.vendor.ibis.expr.types.strings.StringValue.lower) | Convert string to all lowercase. |
+| [lpad](#letsql.vendor.ibis.expr.types.strings.StringValue.lpad) | Pad `arg` by truncating on the right or padding on the left. |
+| [lstrip](#letsql.vendor.ibis.expr.types.strings.StringValue.lstrip) | Remove whitespace from the left side of string. |
+| [path](#letsql.vendor.ibis.expr.types.strings.StringValue.path) | Parse a URL and extract path. |
+| [protocol](#letsql.vendor.ibis.expr.types.strings.StringValue.protocol) | Parse a URL and extract protocol. |
+| [query](#letsql.vendor.ibis.expr.types.strings.StringValue.query) | Parse a URL and returns query string or query string parameter. |
+| [re_extract](#letsql.vendor.ibis.expr.types.strings.StringValue.re_extract) | Return the specified match at `index` from a regex `pattern`. |
+| [re_replace](#letsql.vendor.ibis.expr.types.strings.StringValue.re_replace) | Replace all matches found by regex `pattern` with `replacement`. |
+| [re_search](#letsql.vendor.ibis.expr.types.strings.StringValue.re_search) | Return whether the values match `pattern`. |
+| [re_split](#letsql.vendor.ibis.expr.types.strings.StringValue.re_split) | Split a string by a regular expression `pattern`. |
+| [repeat](#letsql.vendor.ibis.expr.types.strings.StringValue.repeat) | Repeat a string `n` times. |
+| [replace](#letsql.vendor.ibis.expr.types.strings.StringValue.replace) | Replace each exact match of `pattern` with `replacement`. |
+| [reverse](#letsql.vendor.ibis.expr.types.strings.StringValue.reverse) | Reverse the characters of a string. |
+| [right](#letsql.vendor.ibis.expr.types.strings.StringValue.right) | Return up to `nchars` from the end of each string. |
+| [rpad](#letsql.vendor.ibis.expr.types.strings.StringValue.rpad) | Pad `self` by truncating or padding on the right. |
+| [rstrip](#letsql.vendor.ibis.expr.types.strings.StringValue.rstrip) | Remove whitespace from the right side of string. |
+| [split](#letsql.vendor.ibis.expr.types.strings.StringValue.split) | Split as string on `delimiter`. |
+| [startswith](#letsql.vendor.ibis.expr.types.strings.StringValue.startswith) | Determine whether `self` starts with `start`. |
+| [strip](#letsql.vendor.ibis.expr.types.strings.StringValue.strip) | Remove whitespace from left and right sides of a string. |
+| [substr](#letsql.vendor.ibis.expr.types.strings.StringValue.substr) | Extract a substring. |
+| [to_date](#letsql.vendor.ibis.expr.types.strings.StringValue.to_date) |  |
+| [translate](#letsql.vendor.ibis.expr.types.strings.StringValue.translate) | Replace `from_str` characters in `self` characters in `to_str`. |
+| [upper](#letsql.vendor.ibis.expr.types.strings.StringValue.upper) | Convert string to all uppercase. |
+| [userinfo](#letsql.vendor.ibis.expr.types.strings.StringValue.userinfo) | Parse a URL and extract user info. |
+
+### ascii_str { #letsql.vendor.ibis.expr.types.strings.StringValue.ascii_str }
+
+```python
+ascii_str()
+```
+
+Return the numeric ASCII code of the first character of a string.
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                                 | Description                                    |
+|--------|----------------------------------------------------------------------|------------------------------------------------|
+|        | [IntegerValue](`letsql.vendor.ibis.expr.types.numeric.IntegerValue`) | ASCII code of the first character of the input |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"s": ["abc", "def", "ghi"]})
+>>> t.s.ascii_str()
+┏━━━━━━━━━━━━━━━━┓
+┃ StringAscii(s) ┃
+┡━━━━━━━━━━━━━━━━┩
+│ int32          │
+├────────────────┤
+│             97 │
+│            100 │
+│            103 │
+└────────────────┘
+```
+
+### authority { #letsql.vendor.ibis.expr.types.strings.StringValue.authority }
+
+```python
+authority()
+```
+
+Parse a URL and extract authority.
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> url = ibis.literal("https://user:pass@example.com:80/docs/books")
+>>> result = url.authority()  # user:pass@example.com:80
+```
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                               | Description            |
+|--------|--------------------------------------------------------------------|------------------------|
+|        | [StringValue](`letsql.vendor.ibis.expr.types.strings.StringValue`) | Extracted string value |
+
+### capitalize { #letsql.vendor.ibis.expr.types.strings.StringValue.capitalize }
+
+```python
+capitalize()
+```
+
+Uppercase the first letter, lowercase the rest.
+
+This API matches the semantics of the Python [](`str.capitalize`)
+method.
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                               | Description        |
+|--------|--------------------------------------------------------------------|--------------------|
+|        | [StringValue](`letsql.vendor.ibis.expr.types.strings.StringValue`) | Capitalized string |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"s": ["aBC", " abc", "ab cd", None]})
+>>> t.s.capitalize()
+┏━━━━━━━━━━━━━━━┓
+┃ Capitalize(s) ┃
+┡━━━━━━━━━━━━━━━┩
+│ string        │
+├───────────────┤
+│ Abc           │
+│  abc          │
+│ Ab cd         │
+│ NULL          │
+└───────────────┘
+```
+
+### concat { #letsql.vendor.ibis.expr.types.strings.StringValue.concat }
+
+```python
+concat(other, *args)
+```
+
+Concatenate strings.
+
+NULLs are propagated. This methods is equivalent to using the `+` operator.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                                                               | Description                       | Default    |
+|--------|------------------------------------------------------------------------------------|-----------------------------------|------------|
+| other  | [str](`str`) \| [StringValue](`letsql.vendor.ibis.expr.types.strings.StringValue`) | String to concatenate             | _required_ |
+| args   | [str](`str`) \| [StringValue](`letsql.vendor.ibis.expr.types.strings.StringValue`) | Additional strings to concatenate | `()`       |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                               | Description              |
+|--------|--------------------------------------------------------------------|--------------------------|
+|        | [StringValue](`letsql.vendor.ibis.expr.types.strings.StringValue`) | All strings concatenated |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"s": ["abc", None]})
+>>> t.s.concat("xyz", "123")
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ StringConcat((s, 'xyz', '123')) ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ string                          │
+├─────────────────────────────────┤
+│ abcxyz123                       │
+│ NULL                            │
+└─────────────────────────────────┘
+>>> t.s + "xyz"
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ StringConcat((s, 'xyz')) ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ string                   │
+├──────────────────────────┤
+│ abcxyz                   │
+│ NULL                     │
+└──────────────────────────┘
+```
+
+### contains { #letsql.vendor.ibis.expr.types.strings.StringValue.contains }
+
+```python
+contains(substr)
+```
+
+Return whether the expression contains `substr`.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                                                               | Description                  | Default    |
+|--------|------------------------------------------------------------------------------------|------------------------------|------------|
+| substr | [str](`str`) \| [StringValue](`letsql.vendor.ibis.expr.types.strings.StringValue`) | Substring for which to check | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                                 | Description                                                   |
+|--------|----------------------------------------------------------------------|---------------------------------------------------------------|
+|        | [BooleanValue](`letsql.vendor.ibis.expr.types.logical.BooleanValue`) | Boolean indicating the presence of `substr` in the expression |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"s": ["bab", "ddd", "eaf"]})
+>>> t.s.contains("a")
+┏━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ StringContains(s, 'a') ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ boolean                │
+├────────────────────────┤
+│ True                   │
+│ False                  │
+│ True                   │
+└────────────────────────┘
+```
+
+### endswith { #letsql.vendor.ibis.expr.types.strings.StringValue.endswith }
+
+```python
+endswith(end)
+```
+
+Determine if `self` ends with `end`.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                                                               | Description         | Default    |
+|--------|------------------------------------------------------------------------------------|---------------------|------------|
+| end    | [str](`str`) \| [StringValue](`letsql.vendor.ibis.expr.types.strings.StringValue`) | Suffix to check for | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                                 | Description                                       |
+|--------|----------------------------------------------------------------------|---------------------------------------------------|
+|        | [BooleanValue](`letsql.vendor.ibis.expr.types.logical.BooleanValue`) | Boolean indicating whether `self` ends with `end` |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"s": ["Ibis project", "GitHub"]})
+>>> t.s.endswith("project")
+┏━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ EndsWith(s, 'project') ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ boolean                │
+├────────────────────────┤
+│ True                   │
+│ False                  │
+└────────────────────────┘
+```
+
+### find { #letsql.vendor.ibis.expr.types.strings.StringValue.find }
+
+```python
+find(substr, start=None, end=None)
+```
+
+Return the position of the first occurrence of substring.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                                                                                                       | Description                                                              | Default    |
+|--------|----------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------|------------|
+| substr | [str](`str`) \| [StringValue](`letsql.vendor.ibis.expr.types.strings.StringValue`)                                         | Substring to search for                                                  | _required_ |
+| start  | [int](`int`) \| [ir](`letsql.vendor.ibis.expr.types`).[IntegerValue](`letsql.vendor.ibis.expr.types.IntegerValue`) \| None | Zero based index of where to start the search                            | `None`     |
+| end    | [int](`int`) \| [ir](`letsql.vendor.ibis.expr.types`).[IntegerValue](`letsql.vendor.ibis.expr.types.IntegerValue`) \| None | Zero based index of where to stop the search. Currently not implemented. | `None`     |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                                 | Description                                         |
+|--------|----------------------------------------------------------------------|-----------------------------------------------------|
+|        | [IntegerValue](`letsql.vendor.ibis.expr.types.numeric.IntegerValue`) | Position of `substr` in `arg` starting from `start` |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"s": ["abc", "bac", "bca"]})
+>>> t.s.find("a")
+┏━━━━━━━━━━━━━━━━━━━━┓
+┃ StringFind(s, 'a') ┃
+┡━━━━━━━━━━━━━━━━━━━━┩
+│ int64              │
+├────────────────────┤
+│                  0 │
+│                  1 │
+│                  2 │
+└────────────────────┘
+>>> t.s.find("z")
+┏━━━━━━━━━━━━━━━━━━━━┓
+┃ StringFind(s, 'z') ┃
+┡━━━━━━━━━━━━━━━━━━━━┩
+│ int64              │
+├────────────────────┤
+│                 -1 │
+│                 -1 │
+│                 -1 │
+└────────────────────┘
+```
+
+### find_in_set { #letsql.vendor.ibis.expr.types.strings.StringValue.find_in_set }
+
+```python
+find_in_set(str_list)
+```
+
+Find the first occurrence of `str_list` within a list of strings.
+
+No string in `str_list` can have a comma.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name     | Type                                                   | Description         | Default    |
+|----------|--------------------------------------------------------|---------------------|------------|
+| str_list | [Sequence](`collections.abc.Sequence`)\[[str](`str`)\] | Sequence of strings | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                                 | Description                                                                                     |
+|--------|----------------------------------------------------------------------|-------------------------------------------------------------------------------------------------|
+|        | [IntegerValue](`letsql.vendor.ibis.expr.types.numeric.IntegerValue`) | Position of `str_list` in `self`. Returns -1 if `self` isn't found or if `self` contains `','`. |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> table = ibis.table(dict(string_col="string"))
+>>> result = table.string_col.find_in_set(["a", "b"])
+```
+
+### fragment { #letsql.vendor.ibis.expr.types.strings.StringValue.fragment }
+
+```python
+fragment()
+```
+
+Parse a URL and extract fragment identifier.
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> url = ibis.literal("https://example.com:80/docs/#DOWNLOADING")
+>>> result = url.fragment()  # DOWNLOADING
+```
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                               | Description            |
+|--------|--------------------------------------------------------------------|------------------------|
+|        | [StringValue](`letsql.vendor.ibis.expr.types.strings.StringValue`) | Extracted string value |
+
+### host { #letsql.vendor.ibis.expr.types.strings.StringValue.host }
+
+```python
+host()
+```
+
+Parse a URL and extract host.
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> url = ibis.literal("https://user:pass@example.com:80/docs/books")
+>>> result = url.host()  # example.com
+```
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                               | Description            |
+|--------|--------------------------------------------------------------------|------------------------|
+|        | [StringValue](`letsql.vendor.ibis.expr.types.strings.StringValue`) | Extracted string value |
+
+### length { #letsql.vendor.ibis.expr.types.strings.StringValue.length }
+
+```python
+length()
+```
+
+Compute the length of a string.
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                                 | Description                                 |
+|--------|----------------------------------------------------------------------|---------------------------------------------|
+|        | [IntegerValue](`letsql.vendor.ibis.expr.types.numeric.IntegerValue`) | The length of each string in the expression |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"s": ["aaa", "a", "aa"]})
+>>> t.s.length()
+┏━━━━━━━━━━━━━━━━━┓
+┃ StringLength(s) ┃
+┡━━━━━━━━━━━━━━━━━┩
+│ int32           │
+├─────────────────┤
+│               3 │
+│               1 │
+│               2 │
+└─────────────────┘
+```
+
+### levenshtein { #letsql.vendor.ibis.expr.types.strings.StringValue.levenshtein }
+
+```python
+levenshtein(other)
+```
+
+Return the Levenshtein distance between two strings.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                                               | Description          | Default    |
+|--------|--------------------------------------------------------------------|----------------------|------------|
+| other  | [StringValue](`letsql.vendor.ibis.expr.types.strings.StringValue`) | String to compare to | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                                 | Description                               |
+|--------|----------------------------------------------------------------------|-------------------------------------------|
+|        | [IntegerValue](`letsql.vendor.ibis.expr.types.numeric.IntegerValue`) | The edit distance between the two strings |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> s = ibis.literal("kitten")
+>>> s.levenshtein("sitting")
+┌───┐
+│ 3 │
+└───┘
+```
+
+### lower { #letsql.vendor.ibis.expr.types.strings.StringValue.lower }
+
+```python
+lower()
+```
+
+Convert string to all lowercase.
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                               | Description      |
+|--------|--------------------------------------------------------------------|------------------|
+|        | [StringValue](`letsql.vendor.ibis.expr.types.strings.StringValue`) | Lowercase string |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"s": ["AAA", "a", "AA"]})
+>>> t
+┏━━━━━━━━┓
+┃ s      ┃
+┡━━━━━━━━┩
+│ string │
+├────────┤
+│ AAA    │
+│ a      │
+│ AA     │
+└────────┘
+>>> t.s.lower()
+┏━━━━━━━━━━━━━━┓
+┃ Lowercase(s) ┃
+┡━━━━━━━━━━━━━━┩
+│ string       │
+├──────────────┤
+│ aaa          │
+│ a            │
+│ aa           │
+└──────────────┘
+```
+
+### lpad { #letsql.vendor.ibis.expr.types.strings.StringValue.lpad }
+
+```python
+lpad(length, pad=' ')
+```
+
+Pad `arg` by truncating on the right or padding on the left.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                                                                                               | Description             | Default    |
+|--------|--------------------------------------------------------------------------------------------------------------------|-------------------------|------------|
+| length | [int](`int`) \| [ir](`letsql.vendor.ibis.expr.types`).[IntegerValue](`letsql.vendor.ibis.expr.types.IntegerValue`) | Length of output string | _required_ |
+| pad    | [str](`str`) \| [StringValue](`letsql.vendor.ibis.expr.types.strings.StringValue`)                                 | Pad character           | `' '`      |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                               | Description        |
+|--------|--------------------------------------------------------------------|--------------------|
+|        | [StringValue](`letsql.vendor.ibis.expr.types.strings.StringValue`) | Left-padded string |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"s": ["abc", "def", "ghij"]})
+>>> t.s.lpad(5, "-")
+┏━━━━━━━━━━━━━━━━━┓
+┃ LPad(s, 5, '-') ┃
+┡━━━━━━━━━━━━━━━━━┩
+│ string          │
+├─────────────────┤
+│ --abc           │
+│ --def           │
+│ -ghij           │
+└─────────────────┘
+```
+
+### lstrip { #letsql.vendor.ibis.expr.types.strings.StringValue.lstrip }
+
+```python
+lstrip()
+```
+
+Remove whitespace from the left side of string.
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                               | Description          |
+|--------|--------------------------------------------------------------------|----------------------|
+|        | [StringValue](`letsql.vendor.ibis.expr.types.strings.StringValue`) | Left-stripped string |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"s": ["\ta\t", "\nb\n", "\vc\t"]})
+>>> t
+┏━━━━━━━━┓
+┃ s      ┃
+┡━━━━━━━━┩
+│ string │
+├────────┤
+│ \ta\t  │
+│ \nb\n  │
+│ \vc\t  │
+└────────┘
+>>> t.s.lstrip()
+┏━━━━━━━━━━━┓
+┃ LStrip(s) ┃
+┡━━━━━━━━━━━┩
+│ string    │
+├───────────┤
+│ a\t       │
+│ b\n       │
+│ c\t       │
+└───────────┘
+```
+
+### path { #letsql.vendor.ibis.expr.types.strings.StringValue.path }
+
+```python
+path()
+```
+
+Parse a URL and extract path.
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> url = ibis.literal(
+...     "https://example.com:80/docs/books/tutorial/index.html?name=networking"
+... )
+>>> result = url.path()  # docs/books/tutorial/index.html
+```
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                               | Description            |
+|--------|--------------------------------------------------------------------|------------------------|
+|        | [StringValue](`letsql.vendor.ibis.expr.types.strings.StringValue`) | Extracted string value |
+
+### protocol { #letsql.vendor.ibis.expr.types.strings.StringValue.protocol }
+
+```python
+protocol()
+```
+
+Parse a URL and extract protocol.
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> url = ibis.literal("https://user:pass@example.com:80/docs/books")
+>>> result = url.protocol()  # https
+```
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                               | Description            |
+|--------|--------------------------------------------------------------------|------------------------|
+|        | [StringValue](`letsql.vendor.ibis.expr.types.strings.StringValue`) | Extracted string value |
+
+### query { #letsql.vendor.ibis.expr.types.strings.StringValue.query }
+
+```python
+query(key=None)
+```
+
+Parse a URL and returns query string or query string parameter.
+
+If key is passed, return the value of the query string parameter named.
+If key is absent, return the query string.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                                                                       | Description                | Default   |
+|--------|--------------------------------------------------------------------------------------------|----------------------------|-----------|
+| key    | [str](`str`) \| [StringValue](`letsql.vendor.ibis.expr.types.strings.StringValue`) \| None | Query component to extract | `None`    |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> url = ibis.literal(
+...     "https://example.com:80/docs/books/tutorial/index.html?name=networking"
+... )
+>>> result = url.query()  # name=networking
+>>> query_name = url.query("name")  # networking
+```
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                               | Description            |
+|--------|--------------------------------------------------------------------|------------------------|
+|        | [StringValue](`letsql.vendor.ibis.expr.types.strings.StringValue`) | Extracted string value |
+
+### re_extract { #letsql.vendor.ibis.expr.types.strings.StringValue.re_extract }
+
+```python
+re_extract(pattern, index)
+```
+
+Return the specified match at `index` from a regex `pattern`.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name    | Type                                                                                                               | Description                                                                                                                                                                                                                                                                                                        | Default    |
+|---------|--------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------|
+| pattern | [str](`str`) \| [StringValue](`letsql.vendor.ibis.expr.types.strings.StringValue`)                                 | Regular expression pattern string                                                                                                                                                                                                                                                                                  | _required_ |
+| index   | [int](`int`) \| [ir](`letsql.vendor.ibis.expr.types`).[IntegerValue](`letsql.vendor.ibis.expr.types.IntegerValue`) | The index of the match group to return.  The behavior of this function follows the behavior of Python's [`match objects`](https://docs.python.org/3/library/re.html#match-objects): when `index` is zero and there's a match, return the entire match, otherwise return the content of the `index`-th match group. | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                               | Description                                        |
+|--------|--------------------------------------------------------------------|----------------------------------------------------|
+|        | [StringValue](`letsql.vendor.ibis.expr.types.strings.StringValue`) | Extracted match or whole string if `index` is zero |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"s": ["abc", "bac", "bca"]})
+```
+
+Extract a specific group
+
+```python
+>>> t.s.re_extract(r"^(a)bc", 1)
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ RegexExtract(s, '^(a)bc', 1) ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ string                       │
+├──────────────────────────────┤
+│ a                            │
+│ ~                            │
+│ ~                            │
+└──────────────────────────────┘
+```
+
+Extract the entire match
+
+```python
+>>> t.s.re_extract(r"^(a)bc", 0)
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ RegexExtract(s, '^(a)bc', 0) ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ string                       │
+├──────────────────────────────┤
+│ abc                          │
+│ ~                            │
+│ ~                            │
+└──────────────────────────────┘
+```
+
+### re_replace { #letsql.vendor.ibis.expr.types.strings.StringValue.re_replace }
+
+```python
+re_replace(pattern, replacement)
+```
+
+Replace all matches found by regex `pattern` with `replacement`.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name        | Type                                                                               | Description                              | Default    |
+|-------------|------------------------------------------------------------------------------------|------------------------------------------|------------|
+| pattern     | [str](`str`) \| [StringValue](`letsql.vendor.ibis.expr.types.strings.StringValue`) | Regular expression string                | _required_ |
+| replacement | [str](`str`) \| [StringValue](`letsql.vendor.ibis.expr.types.strings.StringValue`) | Replacement string or regular expression | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                               | Description     |
+|--------|--------------------------------------------------------------------|-----------------|
+|        | [StringValue](`letsql.vendor.ibis.expr.types.strings.StringValue`) | Modified string |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"s": ["abc", "bac", "bca", "this has  multi \t whitespace"]})
+>>> s = t.s
+```
+
+Replace all "a"s that are at the beginning of the string with "b":
+
+```python
+>>> s.re_replace("^a", "b")
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ RegexReplace(s, '^a', 'b')    ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ string                        │
+├───────────────────────────────┤
+│ bbc                           │
+│ bac                           │
+│ bca                           │
+│ this has  multi \t whitespace │
+└───────────────────────────────┘
+```
+
+Double up any "a"s or "b"s, using capture groups and backreferences:
+
+```python
+>>> s.re_replace("([ab])", r"\0\0")
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ RegexReplace(s, '()', '\\0\\0')     ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ string                              │
+├─────────────────────────────────────┤
+│ aabbc                               │
+│ bbaac                               │
+│ bbcaa                               │
+│ this haas  multi \t whitespaace     │
+└─────────────────────────────────────┘
+```
+
+Normalize all whitespace to a single space:
+
+```python
+>>> s.re_replace(r"\s+", " ")
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ RegexReplace(s, '\\s+', ' ') ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ string                       │
+├──────────────────────────────┤
+│ abc                          │
+│ bac                          │
+│ bca                          │
+│ this has multi whitespace    │
+└──────────────────────────────┘
+```
+
+### re_search { #letsql.vendor.ibis.expr.types.strings.StringValue.re_search }
+
+```python
+re_search(pattern)
+```
+
+Return whether the values match `pattern`.
+
+Returns `True` if the regex matches a string and `False` otherwise.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name    | Type                                                                               | Description                          | Default    |
+|---------|------------------------------------------------------------------------------------|--------------------------------------|------------|
+| pattern | [str](`str`) \| [StringValue](`letsql.vendor.ibis.expr.types.strings.StringValue`) | Regular expression use for searching | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                                 | Description          |
+|--------|----------------------------------------------------------------------|----------------------|
+|        | [BooleanValue](`letsql.vendor.ibis.expr.types.logical.BooleanValue`) | Indicator of matches |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"s": ["Ibis project", "GitHub"]})
+>>> t.s.re_search(".+Hub")
+┏━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ RegexSearch(s, '.+Hub') ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ boolean                 │
+├─────────────────────────┤
+│ False                   │
+│ True                    │
+└─────────────────────────┘
+```
+
+### re_split { #letsql.vendor.ibis.expr.types.strings.StringValue.re_split }
+
+```python
+re_split(pattern)
+```
+
+Split a string by a regular expression `pattern`.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name    | Type                                                                               | Description                           | Default    |
+|---------|------------------------------------------------------------------------------------|---------------------------------------|------------|
+| pattern | [str](`str`) \| [StringValue](`letsql.vendor.ibis.expr.types.strings.StringValue`) | Regular expression string to split by | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                            | Description                                  |
+|--------|-----------------------------------------------------------------|----------------------------------------------|
+|        | [ArrayValue](`letsql.vendor.ibis.expr.types.arrays.ArrayValue`) | Array of strings from splitting by `pattern` |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable(dict(s=["a.b", "b.....c", "c.........a", "def"]))
+>>> t.s
+┏━━━━━━━━━━━━━┓
+┃ s           ┃
+┡━━━━━━━━━━━━━┩
+│ string      │
+├─────────────┤
+│ a.b         │
+│ b.....c     │
+│ c.........a │
+│ def         │
+└─────────────┘
+>>> t.s.re_split(r"\.+").name("splits")
+┏━━━━━━━━━━━━━━━━━━━━━━┓
+┃ splits               ┃
+┡━━━━━━━━━━━━━━━━━━━━━━┩
+│ array<string>        │
+├──────────────────────┤
+│ ['a', 'b']           │
+│ ['b', 'c']           │
+│ ['c', 'a']           │
+│ ['def']              │
+└──────────────────────┘
+```
+
+### repeat { #letsql.vendor.ibis.expr.types.strings.StringValue.repeat }
+
+```python
+repeat(n)
+```
+
+Repeat a string `n` times.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                                                                                               | Description           | Default    |
+|--------|--------------------------------------------------------------------------------------------------------------------|-----------------------|------------|
+| n      | [int](`int`) \| [ir](`letsql.vendor.ibis.expr.types`).[IntegerValue](`letsql.vendor.ibis.expr.types.IntegerValue`) | Number of repetitions | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                               | Description     |
+|--------|--------------------------------------------------------------------|-----------------|
+|        | [StringValue](`letsql.vendor.ibis.expr.types.strings.StringValue`) | Repeated string |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"s": ["a", "bb", "c"]})
+>>> t.s.repeat(5)
+┏━━━━━━━━━━━━━━┓
+┃ Repeat(s, 5) ┃
+┡━━━━━━━━━━━━━━┩
+│ string       │
+├──────────────┤
+│ aaaaa        │
+│ bbbbbbbbbb   │
+│ ccccc        │
+└──────────────┘
+```
+
+### replace { #letsql.vendor.ibis.expr.types.strings.StringValue.replace }
+
+```python
+replace(pattern, replacement)
+```
+
+Replace each exact match of `pattern` with `replacement`.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name        | Type                                                               | Description        | Default    |
+|-------------|--------------------------------------------------------------------|--------------------|------------|
+| pattern     | [StringValue](`letsql.vendor.ibis.expr.types.strings.StringValue`) | String pattern     | _required_ |
+| replacement | [StringValue](`letsql.vendor.ibis.expr.types.strings.StringValue`) | String replacement | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                               | Description     |
+|--------|--------------------------------------------------------------------|-----------------|
+|        | [StringValue](`letsql.vendor.ibis.expr.types.strings.StringValue`) | Replaced string |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"s": ["abc", "bac", "bca"]})
+>>> t.s.replace("b", "z")
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ StringReplace(s, 'b', 'z') ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ string                     │
+├────────────────────────────┤
+│ azc                        │
+│ zac                        │
+│ zca                        │
+└────────────────────────────┘
+```
+
+### reverse { #letsql.vendor.ibis.expr.types.strings.StringValue.reverse }
+
+```python
+reverse()
+```
+
+Reverse the characters of a string.
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                               | Description     |
+|--------|--------------------------------------------------------------------|-----------------|
+|        | [StringValue](`letsql.vendor.ibis.expr.types.strings.StringValue`) | Reversed string |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"s": ["abc", "def", "ghi"]})
+>>> t
+┏━━━━━━━━┓
+┃ s      ┃
+┡━━━━━━━━┩
+│ string │
+├────────┤
+│ abc    │
+│ def    │
+│ ghi    │
+└────────┘
+>>> t.s.reverse()
+┏━━━━━━━━━━━━┓
+┃ Reverse(s) ┃
+┡━━━━━━━━━━━━┩
+│ string     │
+├────────────┤
+│ cba        │
+│ fed        │
+│ ihg        │
+└────────────┘
+```
+
+### right { #letsql.vendor.ibis.expr.types.strings.StringValue.right }
+
+```python
+right(nchars)
+```
+
+Return up to `nchars` from the end of each string.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                                                                                               | Description                            | Default    |
+|--------|--------------------------------------------------------------------------------------------------------------------|----------------------------------------|------------|
+| nchars | [int](`int`) \| [ir](`letsql.vendor.ibis.expr.types`).[IntegerValue](`letsql.vendor.ibis.expr.types.IntegerValue`) | Maximum number of characters to return | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                               | Description             |
+|--------|--------------------------------------------------------------------|-------------------------|
+|        | [StringValue](`letsql.vendor.ibis.expr.types.strings.StringValue`) | Characters from the end |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"s": ["abc", "defg", "hijlk"]})
+>>> t.s.right(2)
+┏━━━━━━━━━━━━━━━━┓
+┃ StrRight(s, 2) ┃
+┡━━━━━━━━━━━━━━━━┩
+│ string         │
+├────────────────┤
+│ bc             │
+│ fg             │
+│ lk             │
+└────────────────┘
+```
+
+### rpad { #letsql.vendor.ibis.expr.types.strings.StringValue.rpad }
+
+```python
+rpad(length, pad=' ')
+```
+
+Pad `self` by truncating or padding on the right.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                                                                                               | Description             | Default    |
+|--------|--------------------------------------------------------------------------------------------------------------------|-------------------------|------------|
+| self   |                                                                                                                    | String to pad           | _required_ |
+| length | [int](`int`) \| [ir](`letsql.vendor.ibis.expr.types`).[IntegerValue](`letsql.vendor.ibis.expr.types.IntegerValue`) | Length of output string | _required_ |
+| pad    | [str](`str`) \| [StringValue](`letsql.vendor.ibis.expr.types.strings.StringValue`)                                 | Pad character           | `' '`      |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                               | Description         |
+|--------|--------------------------------------------------------------------|---------------------|
+|        | [StringValue](`letsql.vendor.ibis.expr.types.strings.StringValue`) | Right-padded string |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"s": ["abc", "def", "ghij"]})
+>>> t.s.rpad(5, "-")
+┏━━━━━━━━━━━━━━━━━┓
+┃ RPad(s, 5, '-') ┃
+┡━━━━━━━━━━━━━━━━━┩
+│ string          │
+├─────────────────┤
+│ abc--           │
+│ def--           │
+│ ghij-           │
+└─────────────────┘
+```
+
+### rstrip { #letsql.vendor.ibis.expr.types.strings.StringValue.rstrip }
+
+```python
+rstrip()
+```
+
+Remove whitespace from the right side of string.
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                               | Description           |
+|--------|--------------------------------------------------------------------|-----------------------|
+|        | [StringValue](`letsql.vendor.ibis.expr.types.strings.StringValue`) | Right-stripped string |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"s": ["\ta\t", "\nb\n", "\vc\t"]})
+>>> t
+┏━━━━━━━━┓
+┃ s      ┃
+┡━━━━━━━━┩
+│ string │
+├────────┤
+│ \ta\t  │
+│ \nb\n  │
+│ \vc\t  │
+└────────┘
+>>> t.s.rstrip()
+┏━━━━━━━━━━━┓
+┃ RStrip(s) ┃
+┡━━━━━━━━━━━┩
+│ string    │
+├───────────┤
+│ \ta       │
+│ \nb       │
+│ \vc       │
+└───────────┘
+```
+
+### split { #letsql.vendor.ibis.expr.types.strings.StringValue.split }
+
+```python
+split(delimiter)
+```
+
+Split as string on `delimiter`.
+
+::: {.callout-note}
+## This API only works on backends with array support.
+:::
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name      | Type                                                                               | Description       | Default    |
+|-----------|------------------------------------------------------------------------------------|-------------------|------------|
+| delimiter | [str](`str`) \| [StringValue](`letsql.vendor.ibis.expr.types.strings.StringValue`) | Value to split by | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                            | Description                     |
+|--------|-----------------------------------------------------------------|---------------------------------|
+|        | [ArrayValue](`letsql.vendor.ibis.expr.types.arrays.ArrayValue`) | The string split by `delimiter` |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"col": ["a,b,c", "d,e", "f"]})
+>>> t
+┏━━━━━━━━┓
+┃ col    ┃
+┡━━━━━━━━┩
+│ string │
+├────────┤
+│ a,b,c  │
+│ d,e    │
+│ f      │
+└────────┘
+>>> t.col.split(",")
+┏━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ StringSplit(col, ',') ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━┩
+│ array<string>         │
+├───────────────────────┤
+│ ['a', 'b', ... +1]    │
+│ ['d', 'e']            │
+│ ['f']                 │
+└───────────────────────┘
+```
+
+### startswith { #letsql.vendor.ibis.expr.types.strings.StringValue.startswith }
+
+```python
+startswith(start)
+```
+
+Determine whether `self` starts with `start`.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                                                               | Description         | Default    |
+|--------|------------------------------------------------------------------------------------|---------------------|------------|
+| start  | [str](`str`) \| [StringValue](`letsql.vendor.ibis.expr.types.strings.StringValue`) | prefix to check for | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                                 | Description                                           |
+|--------|----------------------------------------------------------------------|-------------------------------------------------------|
+|        | [BooleanValue](`letsql.vendor.ibis.expr.types.logical.BooleanValue`) | Boolean indicating whether `self` starts with `start` |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"s": ["Ibis project", "GitHub"]})
+>>> t.s.startswith("Ibis")
+┏━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ StartsWith(s, 'Ibis') ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━┩
+│ boolean               │
+├───────────────────────┤
+│ True                  │
+│ False                 │
+└───────────────────────┘
+```
+
+### strip { #letsql.vendor.ibis.expr.types.strings.StringValue.strip }
+
+```python
+strip()
+```
+
+Remove whitespace from left and right sides of a string.
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                               | Description     |
+|--------|--------------------------------------------------------------------|-----------------|
+|        | [StringValue](`letsql.vendor.ibis.expr.types.strings.StringValue`) | Stripped string |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"s": ["\ta\t", "\nb\n", "\vc\t"]})
+>>> t
+┏━━━━━━━━┓
+┃ s      ┃
+┡━━━━━━━━┩
+│ string │
+├────────┤
+│ \ta\t  │
+│ \nb\n  │
+│ \vc\t  │
+└────────┘
+>>> t.s.strip()
+┏━━━━━━━━━━┓
+┃ Strip(s) ┃
+┡━━━━━━━━━━┩
+│ string   │
+├──────────┤
+│ a        │
+│ b        │
+│ c        │
+└──────────┘
+```
+
+### substr { #letsql.vendor.ibis.expr.types.strings.StringValue.substr }
+
+```python
+substr(start, length=None)
+```
+
+Extract a substring.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                                                                                                       | Description                                                                   | Default    |
+|--------|----------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------|------------|
+| start  | [int](`int`) \| [ir](`letsql.vendor.ibis.expr.types`).[IntegerValue](`letsql.vendor.ibis.expr.types.IntegerValue`)         | First character to start splitting, indices start at 0                        | _required_ |
+| length | [int](`int`) \| [ir](`letsql.vendor.ibis.expr.types`).[IntegerValue](`letsql.vendor.ibis.expr.types.IntegerValue`) \| None | Maximum length of each substring. If not supplied, searches the entire string | `None`     |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                               | Description     |
+|--------|--------------------------------------------------------------------|-----------------|
+|        | [StringValue](`letsql.vendor.ibis.expr.types.strings.StringValue`) | Found substring |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"s": ["abc", "defg", "hijlk"]})
+>>> t.s.substr(2)
+┏━━━━━━━━━━━━━━━━━┓
+┃ Substring(s, 2) ┃
+┡━━━━━━━━━━━━━━━━━┩
+│ string          │
+├─────────────────┤
+│ c               │
+│ fg              │
+│ jlk             │
+└─────────────────┘
+```
+
+### to_date { #letsql.vendor.ibis.expr.types.strings.StringValue.to_date }
+
+```python
+to_date(format_str)
+```
+
+
+
+### translate { #letsql.vendor.ibis.expr.types.strings.StringValue.translate }
+
+```python
+translate(from_str, to_str)
+```
+
+Replace `from_str` characters in `self` characters in `to_str`.
+
+To avoid unexpected behavior, `from_str` should be shorter than
+`to_str`.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name     | Type                                                               | Description                       | Default    |
+|----------|--------------------------------------------------------------------|-----------------------------------|------------|
+| from_str | [StringValue](`letsql.vendor.ibis.expr.types.strings.StringValue`) | Characters in `arg` to replace    | _required_ |
+| to_str   | [StringValue](`letsql.vendor.ibis.expr.types.strings.StringValue`) | Characters to use for replacement | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                               | Description       |
+|--------|--------------------------------------------------------------------|-------------------|
+|        | [StringValue](`letsql.vendor.ibis.expr.types.strings.StringValue`) | Translated string |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> table = ibis.table(dict(string_col="string"))
+>>> result = table.string_col.translate("a", "b")
+```
+
+### upper { #letsql.vendor.ibis.expr.types.strings.StringValue.upper }
+
+```python
+upper()
+```
+
+Convert string to all uppercase.
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                               | Description      |
+|--------|--------------------------------------------------------------------|------------------|
+|        | [StringValue](`letsql.vendor.ibis.expr.types.strings.StringValue`) | Uppercase string |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"s": ["aaa", "A", "aa"]})
+>>> t
+┏━━━━━━━━┓
+┃ s      ┃
+┡━━━━━━━━┩
+│ string │
+├────────┤
+│ aaa    │
+│ A      │
+│ aa     │
+└────────┘
+>>> t.s.upper()
+┏━━━━━━━━━━━━━━┓
+┃ Uppercase(s) ┃
+┡━━━━━━━━━━━━━━┩
+│ string       │
+├──────────────┤
+│ AAA          │
+│ A            │
+│ AA           │
+└──────────────┘
+```
+
+### userinfo { #letsql.vendor.ibis.expr.types.strings.StringValue.userinfo }
+
+```python
+userinfo()
+```
+
+Parse a URL and extract user info.
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> url = ibis.literal("https://user:pass@example.com:80/docs/books")
+>>> result = url.userinfo()  # user:pass
+```
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                               | Description            |
+|--------|--------------------------------------------------------------------|------------------------|
+|        | [StringValue](`letsql.vendor.ibis.expr.types.strings.StringValue`) | Extracted string value |

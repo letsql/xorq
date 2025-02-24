@@ -1,0 +1,1217 @@
+# Generic expressions
+
+Scalars and columns of any element type.
+
+# Value { #letsql.vendor.ibis.expr.types.generic.Value }
+
+```python
+Value(self, arg)
+```
+
+Base class for a data generating expression having a known type.
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [asc](#letsql.vendor.ibis.expr.types.generic.Value.asc) | Sort an expression ascending. |
+| [cast](#letsql.vendor.ibis.expr.types.generic.Value.cast) | Cast expression to indicated data type. |
+| [coalesce](#letsql.vendor.ibis.expr.types.generic.Value.coalesce) | Return the first non-null value from `args`. |
+| [collect](#letsql.vendor.ibis.expr.types.generic.Value.collect) | Aggregate this expression's elements into an array. |
+| [identical_to](#letsql.vendor.ibis.expr.types.generic.Value.identical_to) | Return whether this expression is identical to other. |
+| [isin](#letsql.vendor.ibis.expr.types.generic.Value.isin) | Check whether this expression's values are in `values`. |
+| [isnull](#letsql.vendor.ibis.expr.types.generic.Value.isnull) | Return whether this expression is NULL. |
+| [name](#letsql.vendor.ibis.expr.types.generic.Value.name) | Rename an expression to `name`. |
+| [notnull](#letsql.vendor.ibis.expr.types.generic.Value.notnull) | Return whether this expression is not NULL. |
+| [nullif](#letsql.vendor.ibis.expr.types.generic.Value.nullif) | Set values to null if they equal the values `null_if_expr`. |
+| [try_cast](#letsql.vendor.ibis.expr.types.generic.Value.try_cast) | Try cast expression to indicated data type. |
+
+### asc { #letsql.vendor.ibis.expr.types.generic.Value.asc }
+
+```python
+asc(nulls_first=False)
+```
+
+Sort an expression ascending.
+
+### cast { #letsql.vendor.ibis.expr.types.generic.Value.cast }
+
+```python
+cast(target_type)
+```
+
+Cast expression to indicated data type.
+
+Similar to `pandas.Series.astype`.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name        | Type                | Description                                                                        | Default    |
+|-------------|---------------------|------------------------------------------------------------------------------------|------------|
+| target_type | [Any](`typing.Any`) | Type to cast to. Anything accepted by [`ibis.dtype()`](./datatypes.qmd#ibis.dtype) | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                   | Description       |
+|--------|--------------------------------------------------------|-------------------|
+|        | [Value](`letsql.vendor.ibis.expr.types.generic.Value`) | Casted expression |
+
+#### See Also {.doc-section .doc-section-see-also}
+
+[`Value.try_cast()`](./expression-generic.qmd#ibis.expr.types.generic.Value.try_cast)
+[`ibis.dtype()`](./datatypes.qmd#ibis.dtype)
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> x = ibis.examples.penguins.fetch()["bill_depth_mm"]
+>>> x
+┏━━━━━━━━━━━━━━━┓
+┃ bill_depth_mm ┃
+┡━━━━━━━━━━━━━━━┩
+│ float64       │
+├───────────────┤
+│          18.7 │
+│          17.4 │
+│          18.0 │
+│          NULL │
+│          19.3 │
+│          20.6 │
+│          17.8 │
+│          19.6 │
+│          18.1 │
+│          20.2 │
+│             … │
+└───────────────┘
+```
+
+python's built-in types can be used
+
+```python
+>>> x.cast(int)
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Cast(bill_depth_mm, int64) ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ int64                      │
+├────────────────────────────┤
+│                         19 │
+│                         17 │
+│                         18 │
+│                       NULL │
+│                         19 │
+│                         21 │
+│                         18 │
+│                         20 │
+│                         18 │
+│                         20 │
+│                          … │
+└────────────────────────────┘
+```
+
+or string names
+
+```python
+>>> x.cast("uint16")
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Cast(bill_depth_mm, uint16) ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ uint16                      │
+├─────────────────────────────┤
+│                          19 │
+│                          17 │
+│                          18 │
+│                        NULL │
+│                          19 │
+│                          21 │
+│                          18 │
+│                          20 │
+│                          18 │
+│                          20 │
+│                           … │
+└─────────────────────────────┘
+```
+
+If you make an illegal cast, you won't know until the backend actually
+executes it. Consider [`.try_cast()`](#ibis.expr.types.generic.Value.try_cast).
+
+```python
+>>> ibis.literal("a string").cast("int64")
+<error>
+```
+
+### coalesce { #letsql.vendor.ibis.expr.types.generic.Value.coalesce }
+
+```python
+coalesce(*args)
+```
+
+Return the first non-null value from `args`.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                                   | Description                                             | Default   |
+|--------|--------------------------------------------------------|---------------------------------------------------------|-----------|
+| args   | [Value](`letsql.vendor.ibis.expr.types.generic.Value`) | Arguments from which to choose the first non-null value | `()`      |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                   | Description          |
+|--------|--------------------------------------------------------|----------------------|
+|        | [Value](`letsql.vendor.ibis.expr.types.generic.Value`) | Coalesced expression |
+
+#### See Also {.doc-section .doc-section-see-also}
+
+[`ibis.coalesce()`](./expression-generic.qmd#ibis.coalesce)
+[`Value.fill_null()`](./expression-generic.qmd#ibis.expr.types.generic.Value.fill_null)
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.coalesce(None, 4, 5).name("x")
+x: Coalesce(...)
+```
+
+### collect { #letsql.vendor.ibis.expr.types.generic.Value.collect }
+
+```python
+collect(where=None, order_by=None, include_null=False)
+```
+
+Aggregate this expression's elements into an array.
+
+This function is called `array_agg`, `list_agg`, or `list` in other systems.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name         | Type                                                                                                       | Description                                                                                                                                                     | Default   |
+|--------------|------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------|
+| where        | [ir](`letsql.vendor.ibis.expr.types`).[BooleanValue](`letsql.vendor.ibis.expr.types.BooleanValue`) \| None | An optional filter expression. If provided, only rows where `where` is `True` will be included in the aggregate.                                                | `None`    |
+| order_by     | [Any](`typing.Any`)                                                                                        | An ordering key (or keys) to use to order the rows before aggregating. If not provided, the order of the items in the result is undefined and backend specific. | `None`    |
+| include_null | [bool](`bool`)                                                                                             | Whether to include null values when performing this aggregation. Set to `True` to include nulls in the result.                                                  | `False`   |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                              | Description     |
+|--------|-------------------------------------------------------------------|-----------------|
+|        | [ArrayScalar](`letsql.vendor.ibis.expr.types.arrays.ArrayScalar`) | Collected array |
+
+#### Examples {.doc-section .doc-section-examples}
+
+Basic collect usage
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"key": list("aaabb"), "value": [1, 2, 3, 4, 5]})
+>>> t
+┏━━━━━━━━┳━━━━━━━┓
+┃ key    ┃ value ┃
+┡━━━━━━━━╇━━━━━━━┩
+│ string │ int64 │
+├────────┼───────┤
+│ a      │     1 │
+│ a      │     2 │
+│ a      │     3 │
+│ b      │     4 │
+│ b      │     5 │
+└────────┴───────┘
+>>> t.value.collect()
+┌────────────────┐
+│ [1, 2, ... +3] │
+└────────────────┘
+>>> type(t.value.collect())
+<class 'ibis.expr.types.arrays.ArrayScalar'>
+```
+
+Collect elements per group
+
+```python
+>>> t.group_by("key").agg(v=lambda t: t.value.collect()).order_by("key")
+┏━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┓
+┃ key    ┃ v                    ┃
+┡━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━┩
+│ string │ array<int64>         │
+├────────┼──────────────────────┤
+│ a      │ [1, 2, ... +1]       │
+│ b      │ [4, 5]               │
+└────────┴──────────────────────┘
+```
+
+Collect elements per group using a filter
+
+```python
+>>> t.group_by("key").agg(v=lambda t: t.value.collect(where=t.value > 1)).order_by("key")
+┏━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┓
+┃ key    ┃ v                    ┃
+┡━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━┩
+│ string │ array<int64>         │
+├────────┼──────────────────────┤
+│ a      │ [2, 3]               │
+│ b      │ [4, 5]               │
+└────────┴──────────────────────┘
+```
+
+### identical_to { #letsql.vendor.ibis.expr.types.generic.Value.identical_to }
+
+```python
+identical_to(other)
+```
+
+Return whether this expression is identical to other.
+
+Corresponds to `IS NOT DISTINCT FROM` in SQL.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                                   | Description              | Default    |
+|--------|--------------------------------------------------------|--------------------------|------------|
+| other  | [Value](`letsql.vendor.ibis.expr.types.generic.Value`) | Expression to compare to | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                                 | Description                                          |
+|--------|----------------------------------------------------------------------|------------------------------------------------------|
+|        | [BooleanValue](`letsql.vendor.ibis.expr.types.logical.BooleanValue`) | Whether this expression is not distinct from `other` |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> one = ibis.literal(1)
+>>> two = ibis.literal(2)
+>>> two.identical_to(one + one)
+┌──────┐
+│ True │
+└──────┘
+```
+
+### isin { #letsql.vendor.ibis.expr.types.generic.Value.isin }
+
+```python
+isin(values)
+```
+
+Check whether this expression's values are in `values`.
+
+`NULL` values are propagated in the output. See examples for details.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                                                                                                                                       | Description                                  | Default    |
+|--------|------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------|------------|
+| values | [Value](`letsql.vendor.ibis.expr.types.generic.Value`) \| [Sequence](`collections.abc.Sequence`)\[[Value](`letsql.vendor.ibis.expr.types.generic.Value`)\] | Values or expression to check for membership | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                                 | Description                      |
+|--------|----------------------------------------------------------------------|----------------------------------|
+|        | [BooleanValue](`letsql.vendor.ibis.expr.types.logical.BooleanValue`) | Expression indicating membership |
+
+#### See Also {.doc-section .doc-section-see-also}
+
+[`Value.notin()`](./expression-generic.qmd#ibis.expr.types.generic.Value.notin)
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"a": [1, 2, 3], "b": [2, 3, 4]})
+>>> t
+┏━━━━━━━┳━━━━━━━┓
+┃ a     ┃ b     ┃
+┡━━━━━━━╇━━━━━━━┩
+│ int64 │ int64 │
+├───────┼───────┤
+│     1 │     2 │
+│     2 │     3 │
+│     3 │     4 │
+└───────┴───────┘
+```
+
+Check against a literal sequence of values
+
+```python
+>>> t.a.isin([1, 2])
+┏━━━━━━━━━━━━━━━━━━━━━┓
+┃ InValues(a, (1, 2)) ┃
+┡━━━━━━━━━━━━━━━━━━━━━┩
+│ boolean             │
+├─────────────────────┤
+│ True                │
+│ True                │
+│ False               │
+└─────────────────────┘
+```
+
+Check against a derived expression
+
+```python
+>>> t.a.isin(t.b + 1)
+┏━━━━━━━━━━━━━━━┓
+┃ InSubquery(a) ┃
+┡━━━━━━━━━━━━━━━┩
+│ boolean       │
+├───────────────┤
+│ False         │
+│ False         │
+│ True          │
+└───────────────┘
+```
+
+Check against a column from a different table
+
+```python
+>>> t2 = ibis.memtable({"x": [99, 2, 99]})
+>>> t.a.isin(t2.x)
+┏━━━━━━━━━━━━━━━┓
+┃ InSubquery(a) ┃
+┡━━━━━━━━━━━━━━━┩
+│ boolean       │
+├───────────────┤
+│ False         │
+│ True          │
+│ False         │
+└───────────────┘
+```
+
+`NULL` behavior
+
+```python
+>>> t = ibis.memtable({"x": [1, 2]})
+>>> t.x.isin([1, None])
+┏━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ InValues(x, (1, None)) ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ boolean                │
+├────────────────────────┤
+│ True                   │
+│ NULL                   │
+└────────────────────────┘
+>>> t = ibis.memtable({"x": [1, None, 2]})
+>>> t.x.isin([1])
+┏━━━━━━━━━━━━━━━━━━━┓
+┃ InValues(x, (1,)) ┃
+┡━━━━━━━━━━━━━━━━━━━┩
+│ boolean           │
+├───────────────────┤
+│ True              │
+│ NULL              │
+│ False             │
+└───────────────────┘
+>>> t.x.isin([3])
+┏━━━━━━━━━━━━━━━━━━━┓
+┃ InValues(x, (3,)) ┃
+┡━━━━━━━━━━━━━━━━━━━┩
+│ boolean           │
+├───────────────────┤
+│ False             │
+│ NULL              │
+│ False             │
+└───────────────────┘
+```
+
+### isnull { #letsql.vendor.ibis.expr.types.generic.Value.isnull }
+
+```python
+isnull()
+```
+
+Return whether this expression is NULL.
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.examples.penguins.fetch().limit(5)
+>>> t.bill_depth_mm
+┏━━━━━━━━━━━━━━━┓
+┃ bill_depth_mm ┃
+┡━━━━━━━━━━━━━━━┩
+│ float64       │
+├───────────────┤
+│          18.7 │
+│          17.4 │
+│          18.0 │
+│          NULL │
+│          19.3 │
+└───────────────┘
+>>> t.bill_depth_mm.isnull()
+┏━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ IsNull(bill_depth_mm) ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━┩
+│ boolean               │
+├───────────────────────┤
+│ False                 │
+│ False                 │
+│ False                 │
+│ True                  │
+│ False                 │
+└───────────────────────┘
+```
+
+### name { #letsql.vendor.ibis.expr.types.generic.Value.name }
+
+```python
+name(name)
+```
+
+Rename an expression to `name`.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type   | Description                    | Default    |
+|--------|--------|--------------------------------|------------|
+| name   |        | The new name of the expression | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                   | Description             |
+|--------|--------------------------------------------------------|-------------------------|
+|        | [Value](`letsql.vendor.ibis.expr.types.generic.Value`) | `self` with name `name` |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"a": [1, 2]}, name="t")
+>>> t.a
+┏━━━━━━━┓
+┃ a     ┃
+┡━━━━━━━┩
+│ int64 │
+├───────┤
+│     1 │
+│     2 │
+└───────┘
+>>> t.a.name("b")
+┏━━━━━━━┓
+┃ b     ┃
+┡━━━━━━━┩
+│ int64 │
+├───────┤
+│     1 │
+│     2 │
+└───────┘
+```
+
+### notnull { #letsql.vendor.ibis.expr.types.generic.Value.notnull }
+
+```python
+notnull()
+```
+
+Return whether this expression is not NULL.
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.examples.penguins.fetch().limit(5)
+>>> t.bill_depth_mm
+┏━━━━━━━━━━━━━━━┓
+┃ bill_depth_mm ┃
+┡━━━━━━━━━━━━━━━┩
+│ float64       │
+├───────────────┤
+│          18.7 │
+│          17.4 │
+│          18.0 │
+│          NULL │
+│          19.3 │
+└───────────────┘
+>>> t.bill_depth_mm.notnull()
+┏━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ NotNull(bill_depth_mm) ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ boolean                │
+├────────────────────────┤
+│ True                   │
+│ True                   │
+│ True                   │
+│ False                  │
+│ True                   │
+└────────────────────────┘
+```
+
+### nullif { #letsql.vendor.ibis.expr.types.generic.Value.nullif }
+
+```python
+nullif(null_if_expr)
+```
+
+Set values to null if they equal the values `null_if_expr`.
+
+Commonly used to avoid divide-by-zero problems by replacing zero with
+`NULL` in the divisor.
+
+Equivalent to `(self == null_if_expr).ifelse(ibis.null(), self)`.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name         | Type                                                   | Description                                      | Default    |
+|--------------|--------------------------------------------------------|--------------------------------------------------|------------|
+| null_if_expr | [Value](`letsql.vendor.ibis.expr.types.generic.Value`) | Expression indicating what values should be NULL | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                   | Description      |
+|--------|--------------------------------------------------------|------------------|
+|        | [Value](`letsql.vendor.ibis.expr.types.generic.Value`) | Value expression |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> vals = ibis.examples.penguins.fetch().head(5).sex
+>>> vals
+┏━━━━━━━━┓
+┃ sex    ┃
+┡━━━━━━━━┩
+│ string │
+├────────┤
+│ male   │
+│ female │
+│ female │
+│ NULL   │
+│ female │
+└────────┘
+>>> vals.nullif("male")
+┏━━━━━━━━━━━━━━━━━━━━━┓
+┃ NullIf(sex, 'male') ┃
+┡━━━━━━━━━━━━━━━━━━━━━┩
+│ string              │
+├─────────────────────┤
+│ NULL                │
+│ female              │
+│ female              │
+│ NULL                │
+│ female              │
+└─────────────────────┘
+```
+
+### try_cast { #letsql.vendor.ibis.expr.types.generic.Value.try_cast }
+
+```python
+try_cast(target_type)
+```
+
+Try cast expression to indicated data type.
+
+If the cast fails for a row, the value is returned
+as null or NaN depending on target_type and backend behavior.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name        | Type                | Description                                                                            | Default    |
+|-------------|---------------------|----------------------------------------------------------------------------------------|------------|
+| target_type | [Any](`typing.Any`) | Type to try cast to. Anything accepted by [`ibis.dtype()`](./datatypes.qmd#ibis.dtype) | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                   | Description       |
+|--------|--------------------------------------------------------|-------------------|
+|        | [Value](`letsql.vendor.ibis.expr.types.generic.Value`) | Casted expression |
+
+#### See Also {.doc-section .doc-section-see-also}
+
+[`Value.cast()`](./expression-generic.qmd#ibis.expr.types.generic.Value.cast)
+[`ibis.dtype()`](./datatypes.qmd#ibis.dtype)
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> from letsql.vendor.ibis import _
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"numbers": [1, 2, 3, 4], "strings": ["1.0", "2", "hello", "world"]})
+>>> t
+┏━━━━━━━━━┳━━━━━━━━━┓
+┃ numbers ┃ strings ┃
+┡━━━━━━━━━╇━━━━━━━━━┩
+│ int64   │ string  │
+├─────────┼─────────┤
+│       1 │ 1.0     │
+│       2 │ 2       │
+│       3 │ hello   │
+│       4 │ world   │
+└─────────┴─────────┘
+>>> t = t.mutate(numbers_to_strings=_.numbers.try_cast("string"))
+>>> t = t.mutate(strings_to_numbers=_.strings.try_cast("int"))
+>>> t
+┏━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━┓
+┃ numbers ┃ strings ┃ numbers_to_strings ┃ strings_to_numbers ┃
+┡━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━┩
+│ int64   │ string  │ string             │ int64              │
+├─────────┼─────────┼────────────────────┼────────────────────┤
+│       1 │ 1.0     │ 1                  │                  1 │
+│       2 │ 2       │ 2                  │                  2 │
+│       3 │ hello   │ 3                  │               NULL │
+│       4 │ world   │ 4                  │               NULL │
+└─────────┴─────────┴────────────────────┴────────────────────┘
+```
+
+# Scalar { #letsql.vendor.ibis.expr.types.generic.Scalar }
+
+```python
+Scalar(self, arg)
+```
+
+
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [as_table](#letsql.vendor.ibis.expr.types.generic.Scalar.as_table) | Promote the scalar expression to a table. |
+
+### as_table { #letsql.vendor.ibis.expr.types.generic.Scalar.as_table }
+
+```python
+as_table()
+```
+
+Promote the scalar expression to a table.
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                 | Description        |
+|--------|------------------------------------------------------|--------------------|
+|        | [Table](`letsql.vendor.ibis.expr.types.joins.Table`) | A table expression |
+
+#### Examples {.doc-section .doc-section-examples}
+
+Promote an aggregation to a table
+
+```python
+>>> import ibis
+>>> import ibis.expr.types as ir
+>>> t = ibis.table(dict(a="str"), name="t")
+>>> expr = t.a.length().sum().name("len").as_table()
+>>> isinstance(expr, ir.Table)
+True
+```
+
+Promote a literal value to a table
+
+```python
+>>> import ibis.expr.types as ir
+>>> lit = ibis.literal(1).name("a").as_table()
+>>> isinstance(lit, ir.Table)
+True
+```
+
+# Column { #letsql.vendor.ibis.expr.types.generic.Column }
+
+```python
+Column(self, arg)
+```
+
+
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [approx_median](#letsql.vendor.ibis.expr.types.generic.Column.approx_median) | Return an approximate of the median of `self`. |
+| [approx_nunique](#letsql.vendor.ibis.expr.types.generic.Column.approx_nunique) | Return the approximate number of distinct elements in `self`. |
+| [arbitrary](#letsql.vendor.ibis.expr.types.generic.Column.arbitrary) | Select an arbitrary value in a column. |
+| [count](#letsql.vendor.ibis.expr.types.generic.Column.count) | Compute the number of rows in an expression. |
+| [first](#letsql.vendor.ibis.expr.types.generic.Column.first) | Return the first value of a column. |
+| [lag](#letsql.vendor.ibis.expr.types.generic.Column.lag) | Return the row located at `offset` rows **before** the current row. |
+| [last](#letsql.vendor.ibis.expr.types.generic.Column.last) | Return the last value of a column. |
+| [lead](#letsql.vendor.ibis.expr.types.generic.Column.lead) | Return the row located at `offset` rows **after** the current row. |
+| [max](#letsql.vendor.ibis.expr.types.generic.Column.max) | Return the maximum of a column. |
+| [median](#letsql.vendor.ibis.expr.types.generic.Column.median) | Return the median of the column. |
+| [min](#letsql.vendor.ibis.expr.types.generic.Column.min) | Return the minimum of a column. |
+| [nth](#letsql.vendor.ibis.expr.types.generic.Column.nth) | Return the `n`th value (0-indexed) over a window. |
+| [nunique](#letsql.vendor.ibis.expr.types.generic.Column.nunique) | Compute the number of distinct rows in an expression. |
+
+### approx_median { #letsql.vendor.ibis.expr.types.generic.Column.approx_median }
+
+```python
+approx_median(where=None)
+```
+
+Return an approximate of the median of `self`.
+
+::: {.callout-note}
+## The result may or may not be exact
+
+Whether the result is an approximation depends on the backend.
+
+::: {.callout-warning}
+## Do not depend on the results being exact
+:::
+
+:::
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                                                                                       | Description                             | Default   |
+|--------|------------------------------------------------------------------------------------------------------------|-----------------------------------------|-----------|
+| where  | [ir](`letsql.vendor.ibis.expr.types`).[BooleanValue](`letsql.vendor.ibis.expr.types.BooleanValue`) \| None | Filter in values when `where` is `True` | `None`    |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                     | Description                              |
+|--------|----------------------------------------------------------|------------------------------------------|
+|        | [Scalar](`letsql.vendor.ibis.expr.types.generic.Scalar`) | An approximation of the median of `self` |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.examples.penguins.fetch()
+>>> t.body_mass_g.approx_median()
+┌────────┐
+│ 4030.0 │
+└────────┘
+>>> t.body_mass_g.approx_median(where=t.species == "Chinstrap")
+┌────────┐
+│ 3700.0 │
+└────────┘
+```
+
+### approx_nunique { #letsql.vendor.ibis.expr.types.generic.Column.approx_nunique }
+
+```python
+approx_nunique(where=None)
+```
+
+Return the approximate number of distinct elements in `self`.
+
+::: {.callout-note}
+## The result may or may not be exact
+
+Whether the result is an approximation depends on the backend.
+
+::: {.callout-warning}
+## Do not depend on the results being exact
+:::
+
+:::
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                                                                                       | Description                             | Default   |
+|--------|------------------------------------------------------------------------------------------------------------|-----------------------------------------|-----------|
+| where  | [ir](`letsql.vendor.ibis.expr.types`).[BooleanValue](`letsql.vendor.ibis.expr.types.BooleanValue`) \| None | Filter in values when `where` is `True` | `None`    |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                     | Description                                             |
+|--------|----------------------------------------------------------|---------------------------------------------------------|
+|        | [Scalar](`letsql.vendor.ibis.expr.types.generic.Scalar`) | An approximate count of the distinct elements of `self` |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.examples.penguins.fetch()
+>>> t.body_mass_g.approx_nunique()
+┌────┐
+│ 92 │
+└────┘
+>>> t.body_mass_g.approx_nunique(where=t.species == "Adelie")
+┌────┐
+│ 61 │
+└────┘
+```
+
+### arbitrary { #letsql.vendor.ibis.expr.types.generic.Column.arbitrary }
+
+```python
+arbitrary(where=None, how=None)
+```
+
+Select an arbitrary value in a column.
+
+Returns an arbitrary (nondeterministic, backend-specific) value from
+the column. The value will be non-NULL, except if the column is empty
+or all values are NULL.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                                                                                       | Description         | Default   |
+|--------|------------------------------------------------------------------------------------------------------------|---------------------|-----------|
+| where  | [ir](`letsql.vendor.ibis.expr.types`).[BooleanValue](`letsql.vendor.ibis.expr.types.BooleanValue`) \| None | A filter expression | `None`    |
+| how    | [Any](`typing.Any`)                                                                                        | DEPRECATED          | `None`    |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                     | Description   |
+|--------|----------------------------------------------------------|---------------|
+|        | [Scalar](`letsql.vendor.ibis.expr.types.generic.Scalar`) | An expression |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"a": [1, 2, 2], "b": list("aaa"), "c": [4.0, 4.1, 4.2]})
+>>> t
+┏━━━━━━━┳━━━━━━━━┳━━━━━━━━━┓
+┃ a     ┃ b      ┃ c       ┃
+┡━━━━━━━╇━━━━━━━━╇━━━━━━━━━┩
+│ int64 │ string │ float64 │
+├───────┼────────┼─────────┤
+│     1 │ a      │     4.0 │
+│     2 │ a      │     4.1 │
+│     2 │ a      │     4.2 │
+└───────┴────────┴─────────┘
+>>> t.group_by("a").agg(arb=t.b.arbitrary(), c=t.c.sum()).order_by("a")
+┏━━━━━━━┳━━━━━━━━┳━━━━━━━━━┓
+┃ a     ┃ arb    ┃ c       ┃
+┡━━━━━━━╇━━━━━━━━╇━━━━━━━━━┩
+│ int64 │ string │ float64 │
+├───────┼────────┼─────────┤
+│     1 │ a      │     4.0 │
+│     2 │ a      │     8.3 │
+└───────┴────────┴─────────┘
+```
+
+### count { #letsql.vendor.ibis.expr.types.generic.Column.count }
+
+```python
+count(where=None)
+```
+
+Compute the number of rows in an expression.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                                                                                       | Description       | Default   |
+|--------|------------------------------------------------------------------------------------------------------------|-------------------|-----------|
+| where  | [ir](`letsql.vendor.ibis.expr.types`).[BooleanValue](`letsql.vendor.ibis.expr.types.BooleanValue`) \| None | Filter expression | `None`    |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                                   | Description                         |
+|--------|------------------------------------------------------------------------|-------------------------------------|
+|        | [IntegerScalar](`letsql.vendor.ibis.expr.types.numeric.IntegerScalar`) | Number of elements in an expression |
+
+### first { #letsql.vendor.ibis.expr.types.generic.Column.first }
+
+```python
+first(where=None, order_by=None, include_null=False)
+```
+
+Return the first value of a column.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name         | Type                                                                                                       | Description                                                                                                                                               | Default   |
+|--------------|------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|-----------|
+| where        | [ir](`letsql.vendor.ibis.expr.types`).[BooleanValue](`letsql.vendor.ibis.expr.types.BooleanValue`) \| None | An optional filter expression. If provided, only rows where `where` is `True` will be included in the aggregate.                                          | `None`    |
+| order_by     | [Any](`typing.Any`)                                                                                        | An ordering key (or keys) to use to order the rows before aggregating. If not provided, the meaning of `first` is undefined and will be backend specific. | `None`    |
+| include_null | [bool](`bool`)                                                                                             | Whether to include null values when performing this aggregation. Set to `True` to include nulls in the result.                                            | `False`   |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"chars": ["a", "b", "c", "d"]})
+>>> t
+┏━━━━━━━━┓
+┃ chars  ┃
+┡━━━━━━━━┩
+│ string │
+├────────┤
+│ a      │
+│ b      │
+│ c      │
+│ d      │
+└────────┘
+>>> t.chars.first()
+┌───┐
+│ a │
+└───┘
+>>> t.chars.first(where=t.chars != "a")
+┌───┐
+│ b │
+└───┘
+```
+
+### lag { #letsql.vendor.ibis.expr.types.generic.Column.lag }
+
+```python
+lag(offset=None, default=None)
+```
+
+Return the row located at `offset` rows **before** the current row.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name    | Type                                                                                                                       | Description                             | Default   |
+|---------|----------------------------------------------------------------------------------------------------------------------------|-----------------------------------------|-----------|
+| offset  | [int](`int`) \| [ir](`letsql.vendor.ibis.expr.types`).[IntegerValue](`letsql.vendor.ibis.expr.types.IntegerValue`) \| None | Index of row to select                  | `None`    |
+| default | [Value](`letsql.vendor.ibis.expr.types.generic.Value`) \| None                                                             | Value used if no row exists at `offset` | `None`    |
+
+### last { #letsql.vendor.ibis.expr.types.generic.Column.last }
+
+```python
+last(where=None, order_by=None, include_null=False)
+```
+
+Return the last value of a column.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name         | Type                                                                                                       | Description                                                                                                                                              | Default   |
+|--------------|------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|-----------|
+| where        | [ir](`letsql.vendor.ibis.expr.types`).[BooleanValue](`letsql.vendor.ibis.expr.types.BooleanValue`) \| None | An optional filter expression. If provided, only rows where `where` is `True` will be included in the aggregate.                                         | `None`    |
+| order_by     | [Any](`typing.Any`)                                                                                        | An ordering key (or keys) to use to order the rows before aggregating. If not provided, the meaning of `last` is undefined and will be backend specific. | `None`    |
+| include_null | [bool](`bool`)                                                                                             | Whether to include null values when performing this aggregation. Set to `True` to include nulls in the result.                                           | `False`   |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"chars": ["a", "b", "c", "d"]})
+>>> t
+┏━━━━━━━━┓
+┃ chars  ┃
+┡━━━━━━━━┩
+│ string │
+├────────┤
+│ a      │
+│ b      │
+│ c      │
+│ d      │
+└────────┘
+>>> t.chars.last()
+┌───┐
+│ d │
+└───┘
+>>> t.chars.last(where=t.chars != "d")
+┌───┐
+│ c │
+└───┘
+```
+
+### lead { #letsql.vendor.ibis.expr.types.generic.Column.lead }
+
+```python
+lead(offset=None, default=None)
+```
+
+Return the row located at `offset` rows **after** the current row.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name    | Type                                                                                                                       | Description                             | Default   |
+|---------|----------------------------------------------------------------------------------------------------------------------------|-----------------------------------------|-----------|
+| offset  | [int](`int`) \| [ir](`letsql.vendor.ibis.expr.types`).[IntegerValue](`letsql.vendor.ibis.expr.types.IntegerValue`) \| None | Index of row to select                  | `None`    |
+| default | [Value](`letsql.vendor.ibis.expr.types.generic.Value`) \| None                                                             | Value used if no row exists at `offset` | `None`    |
+
+### max { #letsql.vendor.ibis.expr.types.generic.Column.max }
+
+```python
+max(where=None)
+```
+
+Return the maximum of a column.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                                                                                       | Description                             | Default   |
+|--------|------------------------------------------------------------------------------------------------------------|-----------------------------------------|-----------|
+| where  | [ir](`letsql.vendor.ibis.expr.types`).[BooleanValue](`letsql.vendor.ibis.expr.types.BooleanValue`) \| None | Filter in values when `where` is `True` | `None`    |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                     | Description                 |
+|--------|----------------------------------------------------------|-----------------------------|
+|        | [Scalar](`letsql.vendor.ibis.expr.types.generic.Scalar`) | The maximum value in `self` |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.examples.penguins.fetch()
+>>> t.body_mass_g.max()
+┌──────┐
+│ 6300 │
+└──────┘
+>>> t.body_mass_g.max(where=t.species == "Chinstrap")
+┌──────┐
+│ 4800 │
+└──────┘
+```
+
+### median { #letsql.vendor.ibis.expr.types.generic.Column.median }
+
+```python
+median(where=None)
+```
+
+Return the median of the column.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                                                                                       | Description                                                                                                               | Default   |
+|--------|------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------|-----------|
+| where  | [ir](`letsql.vendor.ibis.expr.types`).[BooleanValue](`letsql.vendor.ibis.expr.types.BooleanValue`) \| None | Optional boolean expression. If given, only the values where `where` evaluates to true will be considered for the median. | `None`    |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                     | Description          |
+|--------|----------------------------------------------------------|----------------------|
+|        | [Scalar](`letsql.vendor.ibis.expr.types.generic.Scalar`) | Median of the column |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.examples.penguins.fetch()
+```
+
+Compute the median of `bill_depth_mm`
+
+```python
+>>> t.bill_depth_mm.median()
+┌──────┐
+│ 17.3 │
+└──────┘
+>>> t.group_by(t.species).agg(median_bill_depth=t.bill_depth_mm.median()).order_by(
+...     ibis.desc("median_bill_depth")
+... )
+┏━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┓
+┃ species   ┃ median_bill_depth ┃
+┡━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━┩
+│ string    │ float64           │
+├───────────┼───────────────────┤
+│ Chinstrap │             18.45 │
+│ Adelie    │             18.40 │
+│ Gentoo    │             15.00 │
+└───────────┴───────────────────┘
+```
+
+In addition to numeric types, any orderable non-numeric types such as
+strings and dates work with `median`.
+
+```python
+>>> t.group_by(t.island).agg(median_species=t.species.median()).order_by(
+...     ibis.desc("median_species")
+... )
+┏━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┓
+┃ island    ┃ median_species ┃
+┡━━━━━━━━━━━╇━━━━━━━━━━━━━━━━┩
+│ string    │ string         │
+├───────────┼────────────────┤
+│ Biscoe    │ Gentoo         │
+│ Dream     │ Chinstrap      │
+│ Torgersen │ Adelie         │
+└───────────┴────────────────┘
+```
+
+### min { #letsql.vendor.ibis.expr.types.generic.Column.min }
+
+```python
+min(where=None)
+```
+
+Return the minimum of a column.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                                                                                       | Description                             | Default   |
+|--------|------------------------------------------------------------------------------------------------------------|-----------------------------------------|-----------|
+| where  | [ir](`letsql.vendor.ibis.expr.types`).[BooleanValue](`letsql.vendor.ibis.expr.types.BooleanValue`) \| None | Filter in values when `where` is `True` | `None`    |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                     | Description                 |
+|--------|----------------------------------------------------------|-----------------------------|
+|        | [Scalar](`letsql.vendor.ibis.expr.types.generic.Scalar`) | The minimum value in `self` |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.examples.penguins.fetch()
+>>> t.body_mass_g.min()
+┌──────┐
+│ 2700 │
+└──────┘
+>>> t.body_mass_g.min(where=t.species == "Adelie")
+┌──────┐
+│ 2850 │
+└──────┘
+```
+
+### nth { #letsql.vendor.ibis.expr.types.generic.Column.nth }
+
+```python
+nth(n)
+```
+
+Return the `n`th value (0-indexed) over a window.
+
+`.nth(0)` is equivalent to `.first()`. Negative will result in `NULL`.
+If the value of `n` is greater than the number of rows in the window,
+`NULL` will be returned.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                                                                                               | Description        | Default    |
+|--------|--------------------------------------------------------------------------------------------------------------------|--------------------|------------|
+| n      | [int](`int`) \| [ir](`letsql.vendor.ibis.expr.types`).[IntegerValue](`letsql.vendor.ibis.expr.types.IntegerValue`) | Desired rank value | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                     | Description                 |
+|--------|----------------------------------------------------------|-----------------------------|
+|        | [Column](`letsql.vendor.ibis.expr.types.generic.Column`) | The nth value over a window |
+
+### nunique { #letsql.vendor.ibis.expr.types.generic.Column.nunique }
+
+```python
+nunique(where=None)
+```
+
+Compute the number of distinct rows in an expression.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                                                                                       | Description       | Default   |
+|--------|------------------------------------------------------------------------------------------------------------|-------------------|-----------|
+| where  | [ir](`letsql.vendor.ibis.expr.types`).[BooleanValue](`letsql.vendor.ibis.expr.types.BooleanValue`) \| None | Filter expression | `None`    |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                                   | Description                                  |
+|--------|------------------------------------------------------------------------|----------------------------------------------|
+|        | [IntegerScalar](`letsql.vendor.ibis.expr.types.numeric.IntegerScalar`) | Number of distinct elements in an expression |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.examples.penguins.fetch()
+>>> t.body_mass_g.nunique()
+┌────┐
+│ 94 │
+└────┘
+>>> t.body_mass_g.nunique(where=t.species == "Adelie")
+┌────┐
+│ 55 │
+└────┘
+```

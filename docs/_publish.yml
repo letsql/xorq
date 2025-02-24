@@ -1,4 +1,0 @@
-- source: project
-  netlify:
-    - id: a62c5e9d-345a-4ae1-8328-5dce211f0661
-      url: 'https://letsql-docs.netlify.app'

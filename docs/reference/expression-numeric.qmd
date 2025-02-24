@@ -1,0 +1,945 @@
+# Numeric and Boolean expressions
+
+Integer, floating point, decimal, and boolean expressions.
+
+# NumericColumn { #letsql.vendor.ibis.expr.types.numeric.NumericColumn }
+
+```python
+NumericColumn(self, arg)
+```
+
+
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [abs](#letsql.vendor.ibis.expr.types.numeric.NumericColumn.abs) | Return the absolute value of `self`. |
+| [acos](#letsql.vendor.ibis.expr.types.numeric.NumericColumn.acos) | Compute the arc cosine of `self`. |
+| [asin](#letsql.vendor.ibis.expr.types.numeric.NumericColumn.asin) | Compute the arc sine of `self`. |
+| [atan](#letsql.vendor.ibis.expr.types.numeric.NumericColumn.atan) | Compute the arc tangent of `self`. |
+| [atan2](#letsql.vendor.ibis.expr.types.numeric.NumericColumn.atan2) | Compute the two-argument version of arc tangent. |
+| [bucket](#letsql.vendor.ibis.expr.types.numeric.NumericColumn.bucket) | Compute a discrete binning of a numeric array. |
+| [ceil](#letsql.vendor.ibis.expr.types.numeric.NumericColumn.ceil) | Return the ceiling of `self`. |
+| [corr](#letsql.vendor.ibis.expr.types.numeric.NumericColumn.corr) | Return the correlation of two numeric columns. |
+| [cos](#letsql.vendor.ibis.expr.types.numeric.NumericColumn.cos) | Compute the cosine of `self`. |
+| [cot](#letsql.vendor.ibis.expr.types.numeric.NumericColumn.cot) | Compute the cotangent of `self`. |
+| [cov](#letsql.vendor.ibis.expr.types.numeric.NumericColumn.cov) | Return the covariance of two numeric columns. |
+| [degrees](#letsql.vendor.ibis.expr.types.numeric.NumericColumn.degrees) | Compute the degrees of `self` radians. |
+| [exp](#letsql.vendor.ibis.expr.types.numeric.NumericColumn.exp) | Compute $e^\texttt{self}$. |
+| [floor](#letsql.vendor.ibis.expr.types.numeric.NumericColumn.floor) | Return the floor of an expression. |
+| [ln](#letsql.vendor.ibis.expr.types.numeric.NumericColumn.ln) | Compute $\ln\left(\texttt{self}\right)$. |
+| [log](#letsql.vendor.ibis.expr.types.numeric.NumericColumn.log) | Compute $\log_{\texttt{base}}\left(\texttt{self}\right)$. |
+| [log10](#letsql.vendor.ibis.expr.types.numeric.NumericColumn.log10) | Compute $\log_{10}\left(\texttt{self}\right)$. |
+| [log2](#letsql.vendor.ibis.expr.types.numeric.NumericColumn.log2) | Compute $\log_{2}\left(\texttt{self}\right)$. |
+| [mean](#letsql.vendor.ibis.expr.types.numeric.NumericColumn.mean) | Return the mean of a numeric column. |
+| [negate](#letsql.vendor.ibis.expr.types.numeric.NumericColumn.negate) | Negate a numeric expression. |
+| [radians](#letsql.vendor.ibis.expr.types.numeric.NumericColumn.radians) | Compute radians from `self` degrees. |
+| [round](#letsql.vendor.ibis.expr.types.numeric.NumericColumn.round) | Round values to an indicated number of decimal places. |
+| [sign](#letsql.vendor.ibis.expr.types.numeric.NumericColumn.sign) | Return the sign of the input. |
+| [sin](#letsql.vendor.ibis.expr.types.numeric.NumericColumn.sin) | Compute the sine of `self`. |
+| [sqrt](#letsql.vendor.ibis.expr.types.numeric.NumericColumn.sqrt) | Compute the square root of `self`. |
+| [std](#letsql.vendor.ibis.expr.types.numeric.NumericColumn.std) | Return the standard deviation of a numeric column. |
+| [sum](#letsql.vendor.ibis.expr.types.numeric.NumericColumn.sum) | Return the sum of a numeric column. |
+| [tan](#letsql.vendor.ibis.expr.types.numeric.NumericColumn.tan) | Compute the tangent of `self`. |
+| [var](#letsql.vendor.ibis.expr.types.numeric.NumericColumn.var) | Return the variance of a numeric column. |
+
+### abs { #letsql.vendor.ibis.expr.types.numeric.NumericColumn.abs }
+
+```python
+abs()
+```
+
+Return the absolute value of `self`.
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"values": [-1, 2, -3, 4]})
+>>> t.values.abs()
+┏━━━━━━━━━━━━━┓
+┃ Abs(values) ┃
+┡━━━━━━━━━━━━━┩
+│ int64       │
+├─────────────┤
+│           1 │
+│           2 │
+│           3 │
+│           4 │
+└─────────────┘
+```
+
+### acos { #letsql.vendor.ibis.expr.types.numeric.NumericColumn.acos }
+
+```python
+acos()
+```
+
+Compute the arc cosine of `self`.
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"values": [-1, 0, 1]})
+>>> t.values.acos()
+┏━━━━━━━━━━━━━━┓
+┃ Acos(values) ┃
+┡━━━━━━━━━━━━━━┩
+│ float64      │
+├──────────────┤
+│     3.141593 │
+│     1.570796 │
+│     0.000000 │
+└──────────────┘
+```
+
+### asin { #letsql.vendor.ibis.expr.types.numeric.NumericColumn.asin }
+
+```python
+asin()
+```
+
+Compute the arc sine of `self`.
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"values": [-1, 0, 1]})
+>>> t.values.asin()
+┏━━━━━━━━━━━━━━┓
+┃ Asin(values) ┃
+┡━━━━━━━━━━━━━━┩
+│ float64      │
+├──────────────┤
+│    -1.570796 │
+│     0.000000 │
+│     1.570796 │
+└──────────────┘
+```
+
+### atan { #letsql.vendor.ibis.expr.types.numeric.NumericColumn.atan }
+
+```python
+atan()
+```
+
+Compute the arc tangent of `self`.
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"values": [-1, 0, 1]})
+>>> t.values.atan()
+┏━━━━━━━━━━━━━━┓
+┃ Atan(values) ┃
+┡━━━━━━━━━━━━━━┩
+│ float64      │
+├──────────────┤
+│    -0.785398 │
+│     0.000000 │
+│     0.785398 │
+└──────────────┘
+```
+
+### atan2 { #letsql.vendor.ibis.expr.types.numeric.NumericColumn.atan2 }
+
+```python
+atan2(other)
+```
+
+Compute the two-argument version of arc tangent.
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"values": [-1, 0, 1]})
+>>> t.values.atan2(0)
+┏━━━━━━━━━━━━━━━━━━┓
+┃ Atan2(values, 0) ┃
+┡━━━━━━━━━━━━━━━━━━┩
+│ float64          │
+├──────────────────┤
+│        -1.570796 │
+│         0.000000 │
+│         1.570796 │
+└──────────────────┘
+```
+
+### bucket { #letsql.vendor.ibis.expr.types.numeric.NumericColumn.bucket }
+
+```python
+bucket(
+    buckets,
+    closed='left',
+    close_extreme=True,
+    include_under=False,
+    include_over=False,
+)
+```
+
+Compute a discrete binning of a numeric array.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name          | Type                                                   | Description                                                                                                                                                                       | Default    |
+|---------------|--------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------|
+| buckets       | [Sequence](`collections.abc.Sequence`)\[[int](`int`)\] | List of buckets                                                                                                                                                                   | _required_ |
+| closed        | [Literal](`typing.Literal`)\[\'left\', \'right\'\]     | Which side of each interval is closed. For example:  ```python buckets = [0, 100, 200] closed = "left"  # 100 falls in 2nd bucket closed = "right"  # 100 falls in 1st bucket ``` | `'left'`   |
+| close_extreme | [bool](`bool`)                                         | Whether the extreme values fall in the last bucket                                                                                                                                | `True`     |
+| include_over  | [bool](`bool`)                                         | Include values greater than the last bucket in the last bucket                                                                                                                    | `False`    |
+| include_under | [bool](`bool`)                                         | Include values less than the first bucket in the first bucket                                                                                                                     | `False`    |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                                   | Description                     |
+|--------|------------------------------------------------------------------------|---------------------------------|
+|        | [IntegerColumn](`letsql.vendor.ibis.expr.types.numeric.IntegerColumn`) | A categorical column expression |
+
+### ceil { #letsql.vendor.ibis.expr.types.numeric.NumericColumn.ceil }
+
+```python
+ceil()
+```
+
+Return the ceiling of `self`.
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"values": [1, 1.1, 2, 2.1, 3.3]})
+>>> t.values.ceil()
+┏━━━━━━━━━━━━━━┓
+┃ Ceil(values) ┃
+┡━━━━━━━━━━━━━━┩
+│ int64        │
+├──────────────┤
+│            1 │
+│            2 │
+│            2 │
+│            3 │
+│            4 │
+└──────────────┘
+```
+
+### corr { #letsql.vendor.ibis.expr.types.numeric.NumericColumn.corr }
+
+```python
+corr(right, where=None, how='sample')
+```
+
+Return the correlation of two numeric columns.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                                                                                       | Description                      | Default    |
+|--------|------------------------------------------------------------------------------------------------------------|----------------------------------|------------|
+| right  | [NumericColumn](`letsql.vendor.ibis.expr.types.numeric.NumericColumn`)                                     | Numeric column                   | _required_ |
+| where  | [ir](`letsql.vendor.ibis.expr.types`).[BooleanValue](`letsql.vendor.ibis.expr.types.BooleanValue`) \| None | Filter                           | `None`     |
+| how    | [Literal](`typing.Literal`)\[\'sample\', \'pop\'\]                                                         | Population or sample correlation | `'sample'` |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                                   | Description                           |
+|--------|------------------------------------------------------------------------|---------------------------------------|
+|        | [NumericScalar](`letsql.vendor.ibis.expr.types.numeric.NumericScalar`) | The correlation of `left` and `right` |
+
+### cos { #letsql.vendor.ibis.expr.types.numeric.NumericColumn.cos }
+
+```python
+cos()
+```
+
+Compute the cosine of `self`.
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"values": [-1, 0, 1]})
+>>> t.values.cos()
+┏━━━━━━━━━━━━━┓
+┃ Cos(values) ┃
+┡━━━━━━━━━━━━━┩
+│ float64     │
+├─────────────┤
+│    0.540302 │
+│    1.000000 │
+│    0.540302 │
+└─────────────┘
+```
+
+### cot { #letsql.vendor.ibis.expr.types.numeric.NumericColumn.cot }
+
+```python
+cot()
+```
+
+Compute the cotangent of `self`.
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"values": [-1, -2, 3]})
+>>> t.values.cot()
+┏━━━━━━━━━━━━━┓
+┃ Cot(values) ┃
+┡━━━━━━━━━━━━━┩
+│ float64     │
+├─────────────┤
+│   -0.642093 │
+│    0.457658 │
+│   -7.015253 │
+└─────────────┘
+```
+
+### cov { #letsql.vendor.ibis.expr.types.numeric.NumericColumn.cov }
+
+```python
+cov(right, where=None, how='sample')
+```
+
+Return the covariance of two numeric columns.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                                                                                       | Description                     | Default    |
+|--------|------------------------------------------------------------------------------------------------------------|---------------------------------|------------|
+| right  | [NumericColumn](`letsql.vendor.ibis.expr.types.numeric.NumericColumn`)                                     | Numeric column                  | _required_ |
+| where  | [ir](`letsql.vendor.ibis.expr.types`).[BooleanValue](`letsql.vendor.ibis.expr.types.BooleanValue`) \| None | Filter                          | `None`     |
+| how    | [Literal](`typing.Literal`)\[\'sample\', \'pop\'\]                                                         | Population or sample covariance | `'sample'` |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                                   | Description                          |
+|--------|------------------------------------------------------------------------|--------------------------------------|
+|        | [NumericScalar](`letsql.vendor.ibis.expr.types.numeric.NumericScalar`) | The covariance of `self` and `right` |
+
+### degrees { #letsql.vendor.ibis.expr.types.numeric.NumericColumn.degrees }
+
+```python
+degrees()
+```
+
+Compute the degrees of `self` radians.
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> from math import pi
+>>> t = ibis.memtable({"values": [0, pi / 2, pi, 3 * pi / 2, 2 * pi]})
+>>> t.values.degrees()
+┏━━━━━━━━━━━━━━━━━┓
+┃ Degrees(values) ┃
+┡━━━━━━━━━━━━━━━━━┩
+│ float64         │
+├─────────────────┤
+│             0.0 │
+│            90.0 │
+│           180.0 │
+│           270.0 │
+│           360.0 │
+└─────────────────┘
+```
+
+### exp { #letsql.vendor.ibis.expr.types.numeric.NumericColumn.exp }
+
+```python
+exp()
+```
+
+Compute $e^\texttt{self}$.
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                                 | Description       |
+|--------|----------------------------------------------------------------------|-------------------|
+|        | [NumericValue](`letsql.vendor.ibis.expr.types.numeric.NumericValue`) | $e^\texttt{self}$ |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"values": range(4)})
+>>> t.values.exp()
+┏━━━━━━━━━━━━━┓
+┃ Exp(values) ┃
+┡━━━━━━━━━━━━━┩
+│ float64     │
+├─────────────┤
+│    1.000000 │
+│    2.718282 │
+│    7.389056 │
+│   20.085537 │
+└─────────────┘
+```
+
+### floor { #letsql.vendor.ibis.expr.types.numeric.NumericColumn.floor }
+
+```python
+floor()
+```
+
+Return the floor of an expression.
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"values": [1, 1.1, 2, 2.1, 3.3]})
+>>> t.values.floor()
+┏━━━━━━━━━━━━━━━┓
+┃ Floor(values) ┃
+┡━━━━━━━━━━━━━━━┩
+│ int64         │
+├───────────────┤
+│             1 │
+│             1 │
+│             2 │
+│             2 │
+│             3 │
+└───────────────┘
+```
+
+### ln { #letsql.vendor.ibis.expr.types.numeric.NumericColumn.ln }
+
+```python
+ln()
+```
+
+Compute $\ln\left(\texttt{self}\right)$.
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"values": [1, 2.718281828, 3]})
+>>> t.values.ln()
+┏━━━━━━━━━━━━┓
+┃ Ln(values) ┃
+┡━━━━━━━━━━━━┩
+│ float64    │
+├────────────┤
+│   0.000000 │
+│   1.000000 │
+│   1.098612 │
+└────────────┘
+```
+
+### log { #letsql.vendor.ibis.expr.types.numeric.NumericColumn.log }
+
+```python
+log(base=None)
+```
+
+Compute $\log_{\texttt{base}}\left(\texttt{self}\right)$.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                                                         | Description                                             | Default   |
+|--------|------------------------------------------------------------------------------|---------------------------------------------------------|-----------|
+| base   | [NumericValue](`letsql.vendor.ibis.expr.types.numeric.NumericValue`) \| None | The base of the logarithm. If `None`, base `e` is used. | `None`    |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                                 | Description                         |
+|--------|----------------------------------------------------------------------|-------------------------------------|
+|        | [NumericValue](`letsql.vendor.ibis.expr.types.numeric.NumericValue`) | Logarithm of `arg` with base `base` |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> from math import e
+>>> t = ibis.memtable({"values": [e, e**2, e**3]})
+>>> t.values.log()
+┏━━━━━━━━━━━━━┓
+┃ Log(values) ┃
+┡━━━━━━━━━━━━━┩
+│ float64     │
+├─────────────┤
+│         1.0 │
+│         2.0 │
+│         3.0 │
+└─────────────┘
+```
+
+
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"values": [10, 100, 1000]})
+>>> t.values.log(base=10)
+┏━━━━━━━━━━━━━━━━━┓
+┃ Log(values, 10) ┃
+┡━━━━━━━━━━━━━━━━━┩
+│ float64         │
+├─────────────────┤
+│             1.0 │
+│             2.0 │
+│             3.0 │
+└─────────────────┘
+```
+
+### log10 { #letsql.vendor.ibis.expr.types.numeric.NumericColumn.log10 }
+
+```python
+log10()
+```
+
+Compute $\log_{10}\left(\texttt{self}\right)$.
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"values": [1, 10, 100]})
+>>> t.values.log10()
+┏━━━━━━━━━━━━━━━┓
+┃ Log10(values) ┃
+┡━━━━━━━━━━━━━━━┩
+│ float64       │
+├───────────────┤
+│           0.0 │
+│           1.0 │
+│           2.0 │
+└───────────────┘
+```
+
+### log2 { #letsql.vendor.ibis.expr.types.numeric.NumericColumn.log2 }
+
+```python
+log2()
+```
+
+Compute $\log_{2}\left(\texttt{self}\right)$.
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"values": [1, 2, 4, 8]})
+>>> t.values.log2()
+┏━━━━━━━━━━━━━━┓
+┃ Log2(values) ┃
+┡━━━━━━━━━━━━━━┩
+│ float64      │
+├──────────────┤
+│          0.0 │
+│          1.0 │
+│          2.0 │
+│          3.0 │
+└──────────────┘
+```
+
+### mean { #letsql.vendor.ibis.expr.types.numeric.NumericColumn.mean }
+
+```python
+mean(where=None)
+```
+
+Return the mean of a numeric column.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                                                                                       | Description   | Default   |
+|--------|------------------------------------------------------------------------------------------------------------|---------------|-----------|
+| where  | [ir](`letsql.vendor.ibis.expr.types`).[BooleanValue](`letsql.vendor.ibis.expr.types.BooleanValue`) \| None | Filter        | `None`    |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                                   | Description                      |
+|--------|------------------------------------------------------------------------|----------------------------------|
+|        | [NumericScalar](`letsql.vendor.ibis.expr.types.numeric.NumericScalar`) | The mean of the input expression |
+
+### negate { #letsql.vendor.ibis.expr.types.numeric.NumericColumn.negate }
+
+```python
+negate()
+```
+
+Negate a numeric expression.
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                                 | Description                |
+|--------|----------------------------------------------------------------------|----------------------------|
+|        | [NumericValue](`letsql.vendor.ibis.expr.types.numeric.NumericValue`) | A numeric value expression |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"values": [-1, 0, 1]})
+>>> t.values.negate()
+┏━━━━━━━━━━━━━━━━┓
+┃ Negate(values) ┃
+┡━━━━━━━━━━━━━━━━┩
+│ int64          │
+├────────────────┤
+│              1 │
+│              0 │
+│             -1 │
+└────────────────┘
+```
+
+### radians { #letsql.vendor.ibis.expr.types.numeric.NumericColumn.radians }
+
+```python
+radians()
+```
+
+Compute radians from `self` degrees.
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"values": [0, 90, 180, 270, 360]})
+>>> t.values.radians()
+┏━━━━━━━━━━━━━━━━━┓
+┃ Radians(values) ┃
+┡━━━━━━━━━━━━━━━━━┩
+│ float64         │
+├─────────────────┤
+│        0.000000 │
+│        1.570796 │
+│        3.141593 │
+│        4.712389 │
+│        6.283185 │
+└─────────────────┘
+```
+
+### round { #letsql.vendor.ibis.expr.types.numeric.NumericColumn.round }
+
+```python
+round(digits=None)
+```
+
+Round values to an indicated number of decimal places.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                                                                         | Description                                                                                                                                                                                                                                                                                                                                                             | Default   |
+|--------|----------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------|
+| digits | [int](`int`) \| [IntegerValue](`letsql.vendor.ibis.expr.types.numeric.IntegerValue`) \| None | The number of digits to round to.  Here's how the `digits` parameter affects the expression output type:  - `digits` is `False`-y; `self.type()` is `decimal` → `decimal` -   `digits` is nonzero; `self.type()` is `decimal` → `decimal` - `digits` is `False`-y; `self.type()` is Floating  → `int64` -   `digits` is nonzero; `self.type()` is Floating  → `float64` | `None`    |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                                 | Description            |
+|--------|----------------------------------------------------------------------|------------------------|
+|        | [NumericValue](`letsql.vendor.ibis.expr.types.numeric.NumericValue`) | The rounded expression |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"values": [1.22, 1.64, 2.15, 2.54]})
+>>> t
+┏━━━━━━━━━┓
+┃ values  ┃
+┡━━━━━━━━━┩
+│ float64 │
+├─────────┤
+│    1.22 │
+│    1.64 │
+│    2.15 │
+│    2.54 │
+└─────────┘
+>>> t.values.round()
+┏━━━━━━━━━━━━━━━┓
+┃ Round(values) ┃
+┡━━━━━━━━━━━━━━━┩
+│ int64         │
+├───────────────┤
+│             1 │
+│             2 │
+│             2 │
+│             3 │
+└───────────────┘
+>>> t.values.round(digits=1)
+┏━━━━━━━━━━━━━━━━━━┓
+┃ Round(values, 1) ┃
+┡━━━━━━━━━━━━━━━━━━┩
+│ float64          │
+├──────────────────┤
+│              1.2 │
+│              1.6 │
+│              2.2 │
+│              2.5 │
+└──────────────────┘
+```
+
+### sign { #letsql.vendor.ibis.expr.types.numeric.NumericColumn.sign }
+
+```python
+sign()
+```
+
+Return the sign of the input.
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"values": [-1, 2, -3, 4]})
+>>> t.values.sign()
+┏━━━━━━━━━━━━━━┓
+┃ Sign(values) ┃
+┡━━━━━━━━━━━━━━┩
+│ int64        │
+├──────────────┤
+│           -1 │
+│            1 │
+│           -1 │
+│            1 │
+└──────────────┘
+```
+
+### sin { #letsql.vendor.ibis.expr.types.numeric.NumericColumn.sin }
+
+```python
+sin()
+```
+
+Compute the sine of `self`.
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"values": [-1, 0, 1]})
+>>> t.values.sin()
+┏━━━━━━━━━━━━━┓
+┃ Sin(values) ┃
+┡━━━━━━━━━━━━━┩
+│ float64     │
+├─────────────┤
+│   -0.841471 │
+│    0.000000 │
+│    0.841471 │
+└─────────────┘
+```
+
+### sqrt { #letsql.vendor.ibis.expr.types.numeric.NumericColumn.sqrt }
+
+```python
+sqrt()
+```
+
+Compute the square root of `self`.
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"values": [1, 4, 9, 16]})
+>>> t.values.sqrt()
+┏━━━━━━━━━━━━━━┓
+┃ Sqrt(values) ┃
+┡━━━━━━━━━━━━━━┩
+│ float64      │
+├──────────────┤
+│          1.0 │
+│          2.0 │
+│          3.0 │
+│          4.0 │
+└──────────────┘
+```
+
+### std { #letsql.vendor.ibis.expr.types.numeric.NumericColumn.std }
+
+```python
+std(where=None, how='sample')
+```
+
+Return the standard deviation of a numeric column.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                                                                                       | Description                             | Default    |
+|--------|------------------------------------------------------------------------------------------------------------|-----------------------------------------|------------|
+| where  | [ir](`letsql.vendor.ibis.expr.types`).[BooleanValue](`letsql.vendor.ibis.expr.types.BooleanValue`) \| None | Filter                                  | `None`     |
+| how    | [Literal](`typing.Literal`)\[\'sample\', \'pop\'\]                                                         | Sample or population standard deviation | `'sample'` |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                                   | Description                 |
+|--------|------------------------------------------------------------------------|-----------------------------|
+|        | [NumericScalar](`letsql.vendor.ibis.expr.types.numeric.NumericScalar`) | Standard deviation of `arg` |
+
+### sum { #letsql.vendor.ibis.expr.types.numeric.NumericColumn.sum }
+
+```python
+sum(where=None)
+```
+
+Return the sum of a numeric column.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                                                                                       | Description   | Default   |
+|--------|------------------------------------------------------------------------------------------------------------|---------------|-----------|
+| where  | [ir](`letsql.vendor.ibis.expr.types`).[BooleanValue](`letsql.vendor.ibis.expr.types.BooleanValue`) \| None | Filter        | `None`    |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                                   | Description                     |
+|--------|------------------------------------------------------------------------|---------------------------------|
+|        | [NumericScalar](`letsql.vendor.ibis.expr.types.numeric.NumericScalar`) | The sum of the input expression |
+
+### tan { #letsql.vendor.ibis.expr.types.numeric.NumericColumn.tan }
+
+```python
+tan()
+```
+
+Compute the tangent of `self`.
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> import ibis
+>>> ibis.options.interactive = True
+>>> t = ibis.memtable({"values": [-1, 0, 1]})
+>>> t.values.tan()
+┏━━━━━━━━━━━━━┓
+┃ Tan(values) ┃
+┡━━━━━━━━━━━━━┩
+│ float64     │
+├─────────────┤
+│   -1.557408 │
+│    0.000000 │
+│    1.557408 │
+└─────────────┘
+```
+
+### var { #letsql.vendor.ibis.expr.types.numeric.NumericColumn.var }
+
+```python
+var(where=None, how='sample')
+```
+
+Return the variance of a numeric column.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                                                                                       | Description                   | Default    |
+|--------|------------------------------------------------------------------------------------------------------------|-------------------------------|------------|
+| where  | [ir](`letsql.vendor.ibis.expr.types`).[BooleanValue](`letsql.vendor.ibis.expr.types.BooleanValue`) \| None | Filter                        | `None`     |
+| how    | [Literal](`typing.Literal`)\[\'sample\', \'pop\'\]                                                         | Sample or population variance | `'sample'` |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                                   | Description                 |
+|--------|------------------------------------------------------------------------|-----------------------------|
+|        | [NumericScalar](`letsql.vendor.ibis.expr.types.numeric.NumericScalar`) | Standard deviation of `arg` |
+
+# IntegerColumn { #letsql.vendor.ibis.expr.types.numeric.IntegerColumn }
+
+```python
+IntegerColumn(self, arg)
+```
+
+
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [bit_and](#letsql.vendor.ibis.expr.types.numeric.IntegerColumn.bit_and) | Aggregate the column using the bitwise and operator. |
+| [bit_or](#letsql.vendor.ibis.expr.types.numeric.IntegerColumn.bit_or) | Aggregate the column using the bitwise or operator. |
+| [bit_xor](#letsql.vendor.ibis.expr.types.numeric.IntegerColumn.bit_xor) | Aggregate the column using the bitwise exclusive or operator. |
+| [to_timestamp](#letsql.vendor.ibis.expr.types.numeric.IntegerColumn.to_timestamp) |  |
+
+### bit_and { #letsql.vendor.ibis.expr.types.numeric.IntegerColumn.bit_and }
+
+```python
+bit_and(where=None)
+```
+
+Aggregate the column using the bitwise and operator.
+
+### bit_or { #letsql.vendor.ibis.expr.types.numeric.IntegerColumn.bit_or }
+
+```python
+bit_or(where=None)
+```
+
+Aggregate the column using the bitwise or operator.
+
+### bit_xor { #letsql.vendor.ibis.expr.types.numeric.IntegerColumn.bit_xor }
+
+```python
+bit_xor(where=None)
+```
+
+Aggregate the column using the bitwise exclusive or operator.
+
+### to_timestamp { #letsql.vendor.ibis.expr.types.numeric.IntegerColumn.to_timestamp }
+
+```python
+to_timestamp(unit='s')
+```
+
+
+
+# FloatingColumn { #letsql.vendor.ibis.expr.types.numeric.FloatingColumn }
+
+```python
+FloatingColumn(self, arg)
+```
+
+
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [isinf](#letsql.vendor.ibis.expr.types.numeric.FloatingColumn.isinf) | Return whether the value is infinity. |
+| [isnan](#letsql.vendor.ibis.expr.types.numeric.FloatingColumn.isnan) | Return whether the value is NaN. |
+
+### isinf { #letsql.vendor.ibis.expr.types.numeric.FloatingColumn.isinf }
+
+```python
+isinf()
+```
+
+Return whether the value is infinity.
+
+### isnan { #letsql.vendor.ibis.expr.types.numeric.FloatingColumn.isnan }
+
+```python
+isnan()
+```
+
+Return whether the value is NaN.

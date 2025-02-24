@@ -74,11 +74,10 @@ format:
     include-in-header: "style/fontawesome.html"
 
 quartodoc:
-  package: ibis
+  package: letsql
   title: Reference
   sidebar: reference/_sidebar.yml
   render_interlinks: true
-  renderer: _renderer.py
   options:
     signature_name: short
   sections:
@@ -90,7 +89,7 @@ quartodoc:
           summary:
             name: Table expressions
             desc: Tables are one of the core data structures in Ibis.
-          package: ibis.expr.types.relations
+          package: letsql.vendor.ibis.expr.types.relations
           contents:
             - name: Table
               members:
@@ -110,10 +109,12 @@ quartodoc:
                 - sql
                 - union
                 - view
+                - cache
+                - into_backend
 
         - kind: page
           path: expression-generic
-          package: ibis.expr.types.generic
+          package: letsql.vendor.ibis.expr.types.generic
           summary:
             name: Generic expressions
             desc: Scalars and columns of any element type.
@@ -152,7 +153,7 @@ quartodoc:
 
         - kind: page
           path: expression-numeric
-          package: ibis.expr.types.numeric
+          package: letsql.vendor.ibis.expr.types.numeric
           summary:
             name: Numeric and Boolean expressions
             desc: Integer, floating point, decimal, and boolean expressions.
@@ -201,7 +202,7 @@ quartodoc:
 
         - kind: page
           path: expression-strings
-          package: ibis.expr.types.strings
+          package: letsql.vendor.ibis.expr.types.strings
           summary:
             name: String expressions
             desc: All string operations are valid for both scalars and columns.
@@ -247,7 +248,7 @@ quartodoc:
 
         - kind: page
           path: expression-temporal
-          package: ibis.expr.types.temporal
+          package: letsql.vendor.ibis.expr.types.temporal
           summary:
             name: Temporal expressions
             desc: Dates, times, timestamps and intervals.
@@ -282,3 +283,62 @@ quartodoc:
             - name: IntervalValue
               members:
                 - to_unit
+
+        - kind: page
+          path: toplevel-api
+          package: letsql.expr.api
+          summary:
+            name: Top Level API functions
+          contents:
+            - param
+            - schema
+            - table
+            - memtable
+            - desc
+            - asc
+            - preceding
+            - following
+            - and_
+            - or_
+            - random
+            - uuid
+            - case
+            - now
+            - today
+            - rank
+            - dense_rank
+            - percent_rank
+            - cume_dist
+            - ntile
+            - row_number
+            - read_csv
+            - read_parquet
+            - register
+            - read_postgres
+            - read_sqlite
+            - union
+            - intersect
+            - difference
+            - ifelse
+            - coalesce
+            - greatest
+            - least
+            - range
+            - timestamp
+            - date
+            - time
+            - interval
+            - to_sql
+            - execute
+            - to_pyarrow_batches
+            - to_pyarrow
+            - to_parquet
+            - get_plans
+
+        - kind: page
+          path: ml-api
+          package: letsql.expr.ml
+          summary:
+            name: ML API functions
+          contents:
+            - train_test_splits

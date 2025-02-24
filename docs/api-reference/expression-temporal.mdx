@@ -1,0 +1,306 @@
+---
+title: 'Temporal expressions'
+---
+
+Dates, times, timestamps and intervals.
+
+# <span id="letsql.vendor.ibis.expr.types.temporal.TimeValue">TimeValue</span>
+
+```python
+TimeValue(self, arg)
+```
+
+## Methods
+
+| Name                                                                         | Description                                                      |
+|------------------------------------|------------------------------------|
+| [hour](#letsql.vendor.ibis.expr.types.temporal.TimeValue.hour)               | Extract the hour component.                                      |
+| [microsecond](#letsql.vendor.ibis.expr.types.temporal.TimeValue.microsecond) | Extract the microsecond component.                               |
+| [millisecond](#letsql.vendor.ibis.expr.types.temporal.TimeValue.millisecond) | Extract the millisecond component.                               |
+| [minute](#letsql.vendor.ibis.expr.types.temporal.TimeValue.minute)           | Extract the minute component.                                    |
+| [second](#letsql.vendor.ibis.expr.types.temporal.TimeValue.second)           | Extract the second component.                                    |
+| [time](#letsql.vendor.ibis.expr.types.temporal.TimeValue.time)               | Return the time component of the expression.                     |
+| [truncate](#letsql.vendor.ibis.expr.types.temporal.TimeValue.truncate)       | Truncate the expression to a time expression in units of `unit`. |
+
+### <span id="letsql.vendor.ibis.expr.types.temporal.TimeValue.hour">hour</span>
+
+```python
+hour()
+```
+
+Extract the hour component.
+
+### <span id="letsql.vendor.ibis.expr.types.temporal.TimeValue.microsecond">microsecond</span>
+
+```python
+microsecond()
+```
+
+Extract the microsecond component.
+
+### <span id="letsql.vendor.ibis.expr.types.temporal.TimeValue.millisecond">millisecond</span>
+
+```python
+millisecond()
+```
+
+Extract the millisecond component.
+
+### <span id="letsql.vendor.ibis.expr.types.temporal.TimeValue.minute">minute</span>
+
+```python
+minute()
+```
+
+Extract the minute component.
+
+### <span id="letsql.vendor.ibis.expr.types.temporal.TimeValue.second">second</span>
+
+```python
+second()
+```
+
+Extract the second component.
+
+### <span id="letsql.vendor.ibis.expr.types.temporal.TimeValue.time">time</span>
+
+```python
+time()
+```
+
+Return the time component of the expression.
+
+#### Returns
+
+| Name | Type                                                                | Description                  |
+|-------|--------------------------------------------|---------------------|
+|      | [TimeValue](%60letsql.vendor.ibis.expr.types.temporal.TimeValue%60) | The time component of `self` |
+
+### <span id="letsql.vendor.ibis.expr.types.temporal.TimeValue.truncate">truncate</span>
+
+```python
+truncate(unit)
+```
+
+Truncate the expression to a time expression in units of `unit`.
+
+Commonly used for time series resampling.
+
+#### Parameters
+
+| Name | Type                                                               | Description             | Default    |
+|------|--------------------------------------------|---------------|--------|
+| unit | [Literal](%60typing.Literal%60)\['h', 'm', 's', 'ms', 'us', 'ns'\] | The unit to truncate to | *required* |
+
+#### Returns
+
+| Name | Type                                                                | Description                |
+|-------|---------------------------------------------|--------------------|
+|      | [TimeValue](%60letsql.vendor.ibis.expr.types.temporal.TimeValue%60) | `self` truncated to `unit` |
+
+# <span id="letsql.vendor.ibis.expr.types.temporal.DateValue">DateValue</span>
+
+```python
+DateValue(self, arg)
+```
+
+## Methods
+
+| Name                                                                             | Description                                  |
+|------------------------------------|------------------------------------|
+| [day](#letsql.vendor.ibis.expr.types.temporal.DateValue.day)                     | Extract the day component.                   |
+| [day_of_year](#letsql.vendor.ibis.expr.types.temporal.DateValue.day_of_year)     | Extract the day of the year component.       |
+| [epoch_seconds](#letsql.vendor.ibis.expr.types.temporal.DateValue.epoch_seconds) | Extract UNIX epoch in seconds.               |
+| [month](#letsql.vendor.ibis.expr.types.temporal.DateValue.month)                 | Extract the month component.                 |
+| [quarter](#letsql.vendor.ibis.expr.types.temporal.DateValue.quarter)             | Extract the quarter component.               |
+| [truncate](#letsql.vendor.ibis.expr.types.temporal.DateValue.truncate)           | Truncate date expression to units of `unit`. |
+| [week_of_year](#letsql.vendor.ibis.expr.types.temporal.DateValue.week_of_year)   | Extract the week of the year component.      |
+| [year](#letsql.vendor.ibis.expr.types.temporal.DateValue.year)                   | Extract the year component.                  |
+
+### <span id="letsql.vendor.ibis.expr.types.temporal.DateValue.day">day</span>
+
+```python
+day()
+```
+
+Extract the day component.
+
+### <span id="letsql.vendor.ibis.expr.types.temporal.DateValue.day_of_year">day_of_year</span>
+
+```python
+day_of_year()
+```
+
+Extract the day of the year component.
+
+### <span id="letsql.vendor.ibis.expr.types.temporal.DateValue.epoch_seconds">epoch_seconds</span>
+
+```python
+epoch_seconds()
+```
+
+Extract UNIX epoch in seconds.
+
+### <span id="letsql.vendor.ibis.expr.types.temporal.DateValue.month">month</span>
+
+```python
+month()
+```
+
+Extract the month component.
+
+### <span id="letsql.vendor.ibis.expr.types.temporal.DateValue.quarter">quarter</span>
+
+```python
+quarter()
+```
+
+Extract the quarter component.
+
+### <span id="letsql.vendor.ibis.expr.types.temporal.DateValue.truncate">truncate</span>
+
+```python
+truncate(unit)
+```
+
+Truncate date expression to units of `unit`.
+
+#### Parameters
+
+| Name | Type                                                       | Description               | Default    |
+|------|-----------------------------------------|------------------|---------|
+| unit | [Literal](%60typing.Literal%60)\['Y', 'Q', 'M', 'W', 'D'\] | Unit to truncate `arg` to | *required* |
+
+#### Returns
+
+| Name | Type                                                                | Description                     |
+|-------|-------------------------------------------|-----------------------|
+|      | [DateValue](%60letsql.vendor.ibis.expr.types.temporal.DateValue%60) | Truncated date value expression |
+
+### <span id="letsql.vendor.ibis.expr.types.temporal.DateValue.week_of_year">week_of_year</span>
+
+```python
+week_of_year()
+```
+
+Extract the week of the year component.
+
+### <span id="letsql.vendor.ibis.expr.types.temporal.DateValue.year">year</span>
+
+```python
+year()
+```
+
+Extract the year component.
+
+# <span id="letsql.vendor.ibis.expr.types.temporal.DayOfWeek">DayOfWeek</span>
+
+```python
+DayOfWeek(self, expr)
+```
+
+A namespace of methods for extracting day of week information.
+
+## Methods
+
+| Name                                                                     | Description                           |
+|------------------------------------|------------------------------------|
+| [full_name](#letsql.vendor.ibis.expr.types.temporal.DayOfWeek.full_name) | Get the name of the day of the week.  |
+| [index](#letsql.vendor.ibis.expr.types.temporal.DayOfWeek.index)         | Get the index of the day of the week. |
+
+### <span id="letsql.vendor.ibis.expr.types.temporal.DayOfWeek.full_name">full_name</span>
+
+```python
+full_name()
+```
+
+Get the name of the day of the week.
+
+#### Returns
+
+| Name | Type                                                                   | Description                     |
+|------|--------------------------------------------|----------------------|
+|      | [StringValue](%60letsql.vendor.ibis.expr.types.strings.StringValue%60) | The name of the day of the week |
+
+### <span id="letsql.vendor.ibis.expr.types.temporal.DayOfWeek.index">index</span>
+
+```python
+index()
+```
+
+Get the index of the day of the week.
+
+<Note>
+Ibis follows the `pandas` convention for day numbering: Monday = 0 and Sunday = 6.
+</Note>
+
+#### Returns
+
+| Name | Type                                                                     | Description                       |
+|------|--------------------------------------------|-----------------------|
+|      | [IntegerValue](%60letsql.vendor.ibis.expr.types.numeric.IntegerValue%60) | The index of the day of the week. |
+
+# <span id="letsql.vendor.ibis.expr.types.temporal.TimestampValue">TimestampValue</span>
+
+```python
+TimestampValue(self, arg)
+```
+
+## Methods
+
+| Name                                                                        | Description                                       |
+|------------------------------------|------------------------------------|
+| [date](#letsql.vendor.ibis.expr.types.temporal.TimestampValue.date)         | Return the date component of the expression.      |
+| [truncate](#letsql.vendor.ibis.expr.types.temporal.TimestampValue.truncate) | Truncate timestamp expression to units of `unit`. |
+
+### <span id="letsql.vendor.ibis.expr.types.temporal.TimestampValue.date">date</span>
+
+```python
+date()
+```
+
+Return the date component of the expression.
+
+#### Returns
+
+| Name | Type                                                                | Description                  |
+|-------|--------------------------------------------|---------------------|
+|      | [DateValue](%60letsql.vendor.ibis.expr.types.temporal.DateValue%60) | The date component of `self` |
+
+### <span id="letsql.vendor.ibis.expr.types.temporal.TimestampValue.truncate">truncate</span>
+
+```python
+truncate(unit)
+```
+
+Truncate timestamp expression to units of `unit`.
+
+#### Parameters
+
+| Name | Type                                                                                        | Description         | Default    |
+|-----|--------------------------------------------------|-----------|-------|
+| unit | [Literal](%60typing.Literal%60)\['Y', 'Q', 'M', 'W', 'D', 'h', 'm', 's', 'ms', 'us', 'ns'\] | Unit to truncate to | *required* |
+
+#### Returns
+
+| Name | Type                                                                          | Description                    |
+|------|----------------------------------------------|--------------------|
+|      | [TimestampValue](%60letsql.vendor.ibis.expr.types.temporal.TimestampValue%60) | Truncated timestamp expression |
+
+# <span id="letsql.vendor.ibis.expr.types.temporal.IntervalValue">IntervalValue</span>
+
+```python
+IntervalValue(self, arg)
+```
+
+## Methods
+
+| Name                                                                     | Description |
+|------------------------------------|------------------------------------|
+| [to_unit](#letsql.vendor.ibis.expr.types.temporal.IntervalValue.to_unit) |             |
+
+### <span id="letsql.vendor.ibis.expr.types.temporal.IntervalValue.to_unit">to_unit</span>
+
+```python
+to_unit(target_unit)
+```

@@ -1,4 +1,4 @@
-# xorq (formerly LETSQL)
+# xorq: do-anything, run-anywhere pandas-style pipelines
 
 [![Downloads](https://static.pepy.tech/badge/letsql)](https://pepy.tech/project/letsql)
 ![PyPI - Version](https://img.shields.io/pypi/v/letsql)
@@ -7,19 +7,37 @@
 ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/letsql/letsql/ci-test.yml)
 ![Codecov](https://img.shields.io/codecov/c/github/letsql/letsql)
 
-Data processing library built on top of **Ibis** and **DataFusion** to write multi-engine data workflows.
+xorq is a deferred computation toolchain that brings the replicability and
+performance of declarative pipelines to the Python ML ecosystem. It enables us
+to write pandas-style transformations that never run out of memory,
+automatically cache intermediate results, and seamlessly move between SQL
+engines and Python UDFs—all while maintaining replicability. xorq is built on
+top of Ibis and DataFusion.
 
-> [!NOTE]  
-> We are changing the name from LETSQL to xorq.
 
-> [!CAUTION]
-> This library does not currently have a stable release. Both the API and implementation are subject to change, and future updates may not be backward compatible.
+> [!CAUTION] This library does not currently have a stable release. Both the
+> API and implementation are subject to change, and future updates may not be
+> backward compatible.
+
+| Feature | Description |
+|---------|-------------|
+| **Declarative expressions** | Built on Ibis, supporting multiple SQL engines |
+| **Built-in caching** | Automatically invalidates when dependencies change |
+| **Multi-engine** | Seamlessly mix SQL engines with Python processing |
+| **Serializable pipelines** | YAML definitions for version control and CI/CD |
+| **Portable UDFs** | Portable UDFs |
+| **Arrow-native architecture** | High-performance data transfer between components |
 
 ## Getting Started
+xorq functions as both an interactive library for building expressions and a
+command-line interface. This dual nature enables seamless transition
+from exploratory research to production-ready artifacts. The steps below will
+guide through using both the CLI and library components to get started.
 
 ### Installation
+> [!NOTE]  We are changing the name from LETSQL to xorq.
 
-LETSQL is available as [`xorq`](https://pypi.org/project/xorq/) on PyPI:
+xorq is available as [`xorq`](https://pypi.org/project/xorq/) on PyPI:
 
 ```shell
 pip install xorq
@@ -28,25 +46,33 @@ pip install xorq
 ### Usage
 
 ```python
-import urllib.request
+import xorq as xo
 
-import xorq as xq
 
-urllib.request.urlretrieve("https://raw.githubusercontent.com/mwaskom/seaborn-data/master/iris.csv", "iris.csv")
+pg = xo.postgres.connect_env()
+db = xo.duckdb.connect()
 
-con = xq.connect()
-iris_table = con.read_csv("iris.csv", table_name="iris")
+batting = pg.table("batting")
+awards_players = xo.examples.awards_players.fetch(backend=db)
 
-res = (
-    iris_table.filter([iris_table.sepal_length > 5])
-    .group_by("species")
-    .agg(iris_table.sepal_width.sum())
-    .execute()
-)
+left = batting.filter(batting.yearID == 2015)
+
+right = (awards_players.filter(awards_players.lgID == "NL")
+                       .drop("yearID", "lgID")
+                       .into_backend(pg, "filtered"))
+
+expr = (left.join(right, ["playerID"], how="semi")
+            .cache()
+            .select(["yearID", "stint"]))
+
+# expr.build().execute()
+result = expr.execute()
 ```
 
-for more examples on how to use letsql, check the [examples](https://github.com/letsql/xorq/tree/main/examples) directory, 
-note that in order to run some of the scripts in there, you need to install the library with `examples` extra:
+for more examples on how to use letsql, check the
+[examples](https://github.com/letsql/xorq/tree/main/examples) directory, note
+that in order to run some of the scripts in there, you need to install the
+library with `examples` extra:
 
 ```shell
 pip install 'xorq[examples]'

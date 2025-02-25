@@ -73,6 +73,7 @@ examples = [
     "xgboost >=1.6.1 ; python_version >= '3.10' and python_version < '4.0'",
     "duckdb >=0.10.3,<2 ; python_version >= '3.10' and python_version < '4.0'",
     "quickgrove>=0.1.2",
+    "scikit-learn<2.0.0,>=1.4.0"
 ]
 postgres = [
     "adbc-driver-postgresql>=1.4.0",

@@ -14,11 +14,6 @@ automatically cache intermediate results, and seamlessly move between SQL
 engines and Python UDFs—all while maintaining replicability. xorq is built on
 top of Ibis and DataFusion.
 
-
-> [!CAUTION] This library does not currently have a stable release. Both the
-> API and implementation are subject to change, and future updates may not be
-> backward compatible.
-
 | Feature | Description |
 |---------|-------------|
 | **Declarative expressions** | Built on Ibis, supporting multiple SQL engines |
@@ -34,14 +29,20 @@ command-line interface. This dual nature enables seamless transition
 from exploratory research to production-ready artifacts. The steps below will
 guide through using both the CLI and library components to get started.
 
+> [!CAUTION] 
+> This library does not currently have a stable release. Both the
+> API and implementation are subject to change, and future updates may not be
+> backward compatible.
 ### Installation
-> [!NOTE]  We are changing the name from LETSQL to xorq.
 
 xorq is available as [`xorq`](https://pypi.org/project/xorq/) on PyPI:
 
 ```shell
 pip install xorq
 ```
+
+> [!NOTE]
+> We are changing the name from LETSQL to xorq.
 
 ### Usage
 

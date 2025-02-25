@@ -62,6 +62,7 @@ from xorq.vendor.ibis.util import gen_name, normalize_filename
 # include string view
 _from_pyarrow_types[pa.string_view()] = dt.String
 _from_pyarrow_types[pa.large_string()] = LargeString
+_from_pyarrow_types[pa.binary_view()] = dt.binary
 _to_pyarrow_types[LargeString] = pa.large_string()
 
 

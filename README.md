@@ -14,14 +14,17 @@ automatically cache intermediate results, and seamlessly move between SQL
 engines and Python UDFs—all while maintaining replicability. xorq is built on
 top of Ibis and DataFusion.
 
+I'll add more detailed descriptions for each of xorq's features:
+
 | Feature | Description |
 |---------|-------------|
-| **Declarative expressions** | Built on Ibis, supporting multiple SQL engines |
-| **Built-in caching** | Automatically invalidates when dependencies change |
-| **Multi-engine** | Seamlessly mix SQL engines with Python processing |
-| **Serializable pipelines** | YAML definitions for version control and CI/CD |
-| **Portable UDFs** | Portable UDFs |
-| **Arrow-native architecture** | High-performance data transfer between components |
+| **Declarative expressions** | Powered by Ibis, xorq lets you define transformations in a Pythonic, declarative style without being tied to a specific execution engine. This abstraction allows you to write expressions once and execute them across various backends (DuckDB, DataFusion, Spark, Snowflake) without rewriting code. The `.into_backend()` method enables seamless transitions between engines within a single pipeline. |
+| **[Built-in caching](https://docs.xorq.dev/core_concepts#caching-system)** | xorq automatically tracks the computational graph of your pipeline and intelligently caches intermediate results, minimizing repeated work. The cache system hashes expressions with metadata, enabling smart invalidation when code or parameters change. Supports multiple storage backends (in-memory, disk, etc.) and can materialize results as Arrow RecordBatches for optimal performance. |
+| **[Multi-engine](https://docs.xorq.dev/core_concepts#multi-engine-system)** | Create unified ML workflows that leverage the strengths of different data engines in a single pipeline. xorq orchestrates data movement between engines (e.g., Snowflake for initial extraction, DuckDB for transformations, and Python for ML model training), handling all the complexity of cross-engine compatibility and data serialization behind the scenes. |
+| **Serializable pipelines** | All pipeline definitions, including UDFs, are serialized to YAML format, enabling robust version control, reproducibility, and CI/CD integration. This serialization captures the complete execution graph, ensuring consistent results across environments and making it easy to track changes over time. |
+| **Portable UDFs** | User-defined functions in xorq can be registered, serialized, and reused across different environments. These UDFs maintain consistent behavior regardless of execution context, supporting variants like aggregates, window functions, and transformations. The embedded engine provides a portable runtime for UDF execution, enhancing reproducibility. |
+| **Arrow-native architecture** | Built on Apache Arrow's columnar memory format and Arrow Flight transport layer, xorq achieves high-performance data transfer without cumbersome serialization overhead. This design enables efficient data movement between services, supports both ephemeral processing for partial expressions and long-lived services for production deployments. |
+
 
 ## Getting Started
 xorq functions as both an interactive library for building expressions and a

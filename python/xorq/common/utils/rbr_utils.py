@@ -9,7 +9,7 @@ import xorq as xo
 
 
 @toolz.curry
-def excepts_print_exc(exc, func, handler=toolz.functoolz.return_none):
+def excepts_print_exc(func, exc=Exception, handler=toolz.functoolz.return_none):
     _handler = toolz.compose(handler, toolz.curried.do(traceback.print_exception))
     return toolz.excepts(exc, func, _handler)
 
@@ -39,12 +39,12 @@ def instrument_reader(reader, prefix=""):
     return pa.RecordBatchReader.from_batches(reader.schema, gen(reader))
 
 
-@excepts_print_exc(Exception)
+@excepts_print_exc
 def streaming_split_exchange(
     split_key, f, context, reader, writer, options=None, **kwargs
 ):
     started = False
-    g = excepts_print_exc(Exception, f)
+    g = excepts_print_exc(f)
     for split_reader in ReaderSplitter(
         make_filtered_reader(reader),
         split_key,

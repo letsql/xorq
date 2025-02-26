@@ -124,6 +124,9 @@ duckdb = "xorq.backends.duckdb"
 pandas = "xorq.backends.pandas"
 trino = "xorq.backends.trino"
 
+[project.scripts]
+xorq = "xorq.cli:main"
+
 [tool.maturin]
 module-name = "xorq._internal"
 python-source = "python"

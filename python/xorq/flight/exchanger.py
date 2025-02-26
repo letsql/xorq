@@ -4,10 +4,15 @@ from abc import (
     ABC,
     abstractmethod,
 )
+from typing import Callable
 
+import dask
 import pandas as pd
 import pyarrow as pa
 import requests
+import toolz
+
+from xorq.common.utils.rbr_utils import excepts_print_exc
 
 
 def schemas_equal(s0, s1):
@@ -389,6 +394,61 @@ class UDFExchanger(AbstractExchanger):
             "description": self.description,
             "command": self.command,
         }
+
+
+def make_udxf(
+    name,
+    process_df,
+    maybe_schema_in,
+    maybe_schema_out,
+    description=None,
+    command=None,
+    do_wraps=True,
+):
+    def process_batch(process_df, batch, metadata=None, **kwargs):
+        df = batch.to_pandas()
+        out = process_df(df)
+        return pa.RecordBatch.from_pandas(out)
+
+    if do_wraps:
+        exchange_f = excepts_print_exc(
+            Exception,
+            functools.partial(
+                streaming_exchange, functools.partial(process_batch, process_df)
+            ),
+        )
+    else:
+        exchange_f = process_df
+
+    if isinstance(maybe_schema_in, pa.Schema):
+        schema_in_required = maybe_schema_in
+        schema_in_condition = toolz.curried.operator.eq(maybe_schema_in)
+    elif isinstance(maybe_schema_in, Callable):
+        schema_in_required = None
+        schema_in_condition = maybe_schema_in
+    else:
+        raise ValueError
+
+    if isinstance(maybe_schema_out, pa.Schema):
+        calc_schema_out = lambda schema_in: maybe_schema_out
+    elif isinstance(maybe_schema_out, Callable):
+        calc_schema_out = maybe_schema_out
+    else:
+        raise ValueError
+
+    typ = type(
+        name,
+        (AbstractExchanger,),
+        {
+            "exchange_f": exchange_f,
+            "schema_in_required": schema_in_required,
+            "schema_in_condition": schema_in_condition,
+            "calc_schema_out": calc_schema_out,
+            "description": description or name,
+            "command": command or dask.base.tokenize(process_df),
+        },
+    )
+    return typ
 
 
 exchangers = {

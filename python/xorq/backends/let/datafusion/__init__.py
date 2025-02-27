@@ -301,7 +301,7 @@ class Backend(SQLBackend, CanCreateCatalog, CanCreateDatabase, CanCreateSchema, 
                     self.con.register_udaf(udaf)
 
     def _compile_pyarrow_expr_udf(self, udf_node):
-        def extract_computed_kwargs(expr):
+        def extract_computed_arg(expr):
             # user can do Scalar.to_table() if they want to cache it
             value = xo.execute(expr)
             if isinstance(value, pd.DataFrame):
@@ -311,9 +311,9 @@ class Backend(SQLBackend, CanCreateCatalog, CanCreateDatabase, CanCreateSchema, 
             value = udf_node.post_process_fn(value)
             return value
 
-        computed_kwargs = extract_computed_kwargs(udf_node.computed_kwargs_expr)
+        computed_arg = extract_computed_arg(udf_node.computed_kwargs_expr)
         return df.udf(
-            functools.partial(udf_node.__func__, **computed_kwargs),
+            functools.partial(udf_node.__func__, computed_arg=computed_arg),
             input_types=[PyArrowType.from_ibis(arg.dtype) for arg in udf_node.args],
             return_type=PyArrowType.from_ibis(udf_node.dtype),
             volatility=getattr(udf_node, "__config__", {}).get(

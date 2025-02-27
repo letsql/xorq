@@ -55,11 +55,17 @@ def make_pandas_expr_udf(
 ):
     import pandas as pd
 
-    def fn_from_arrays(*arrays, **kwargs):
+    def fn_from_arrays(*arrays, computed_arg=None, **kwargs):
+        if computed_arg is None:
+            raise ValueError(
+                "Caller must bind computed_arg to the output of computed_kwargs_expr"
+            )
         df = pd.DataFrame(
             {name: array.to_pandas() for (name, array) in zip(schema, arrays)}
         )
-        return pa.Array.from_pandas(fn(df, **kwargs), type=return_type.to_pyarrow())
+        return pa.Array.from_pandas(
+            fn(computed_arg, df, **kwargs), type=return_type.to_pyarrow()
+        )
 
     name = name if name is not None else _make_udf_name(fn)
     bases = (ExprScalarUDF,)

@@ -190,9 +190,9 @@ def test_pandas_expr_udf():
         y = df[target]
         dtrain = xgb.DMatrix(X, y)
         bst = xgb.train(param, dtrain, num_boost_round=num_round)
-        return pickle.dumps({"model": bst})
+        return bst
 
-    def predict_xgboost_model(df, model):
+    def predict_xgboost_model(model, df):
         return model.predict(xgb.DMatrix(df))
 
     features = (
@@ -213,14 +213,14 @@ def test_pandas_expr_udf():
 
     # manual run
     df = xo.execute(t)
-    model = pickle.loads(train_fn(df))["model"]
+    model = train_fn(df)
     from_pd = df.assign(
-        **{name: predict_xgboost_model(df[list(features)], model)}
+        **{name: predict_xgboost_model(model, df[list(features)])}
     ).astype({name: typ})
 
     # using expr-scalar-udf
     model_udaf = udf.agg.pandas_df(
-        fn=train_fn,
+        fn=toolz.compose(pickle.dumps, train_fn),
         schema=t[features + (target,)].schema(),
         return_type=dt.binary,
         name="xgboost_model",

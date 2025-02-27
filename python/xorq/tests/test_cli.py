@@ -1,9 +1,13 @@
+import csv
+import json
+import re
 import sys
+from io import StringIO
 from pathlib import Path
 
 import pytest
 
-from xorq.cli import main
+from xorq.cli import build_command, main, run_command
 
 
 def test_build_command(monkeypatch, tmp_path, capsys):
@@ -60,6 +64,26 @@ def test_build_command_on_notebook(monkeypatch, tmp_path, capsys):
     assert "Building expr" in captured.out
 
     assert target_dir.exists()
+
+
+@pytest.mark.parametrize("output_format", ["csv", "json"])
+def test_run_command(monkeypatch, tmp_path, capsys, output_format):
+    target_dir = tmp_path / "build"
+    script_path = Path(__file__).absolute().parent / "fixtures" / "pipeline.py"
+
+    build_command(str(script_path), ["expr"], target_dir=str(target_dir))
+    build_capture = str(capsys.readouterr())
+
+    if match := re.search("artifacts/([0-9a-f]+)", build_capture):
+        run_command(target_dir, match.group(1), output_format)
+        run_capture = str(capsys.readouterr())
+
+        match output_format:
+            case "csv":
+                reader = csv.DictReader(StringIO(run_capture))
+                assert list(reader)
+            case "json":
+                assert json.loads(run_capture)
 
 
 def test_build_command_not_implemented(monkeypatch, capsys):

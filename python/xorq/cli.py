@@ -156,14 +156,15 @@ def build_command(script_path, expression, target_dir="builds"):
     )
 
 
-def run_command(builds_dir, hash_id):
+def run_command(builds_dir, hash_id, output_format="csv"):
     """
     Run a build, by recreating the expression from the build
 
     Parameters
     ----------
     builds_dir : Path to the builds directory
-    hash_id : The hash identifier of the build to run
+    hash_id : Hash identifier of the build to run
+    output_format : Output format of the run (either "csv" or "json")
 
     Returns
     -------
@@ -172,8 +173,13 @@ def run_command(builds_dir, hash_id):
     try:
         build_manager = BuildManager(builds_dir)
         expr = build_manager.load_expr(hash_id)
-        print(f"Executing expression with {hash_id}")
-        expr.execute()
+        frame = expr.execute()
+
+        match output_format:
+            case "csv":
+                frame.to_csv(sys.stdout, index=False, index_label=False)
+            case "json":
+                frame.to_json(sys.stdout, orient="records")
 
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
@@ -211,6 +217,9 @@ def main():
     run_parser.add_argument(
         "expression_hash", help="Hash identifier of the build to run"
     )
+    run_parser.add_argument(
+        "--format", choices=["csv", "json"], default="csv", help="Output format"
+    )
 
     args = parser.parse_args()
 
@@ -219,7 +228,7 @@ def main():
             expressions = [args.expressions] if args.expressions else []
             build_command(args.script_path, expressions, args.target_dir)
         case "run":
-            run_command(args.builds_dir, args.expression_hash)
+            run_command(args.builds_dir, args.expression_hash, args.format)
 
 
 if __name__ == "__main__":

@@ -6,7 +6,7 @@ import dask
 import sqlglot as sg
 
 import xorq as xo
-import xorq.vendor.ibis.expr.datatypes as dat
+import xorq.expr.datatypes as dat
 import xorq.vendor.ibis.expr.operations.relations as ir
 from xorq.common.utils.dask_normalize.dask_normalize_utils import (
     normalize_seq_with_caller,

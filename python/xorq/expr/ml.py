@@ -12,7 +12,7 @@ import pandas as pd
 import toolz
 
 import xorq as xo
-import xorq.vendor.ibis.expr.datatypes as dt
+import xorq.expr.datatypes as dt
 import xorq.vendor.ibis.expr.operations as ops
 
 # TODO: How should we / should we enforce xorq table ?

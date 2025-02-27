@@ -1,9 +1,9 @@
 import pandas as pd
 
 import xorq as xo
+from xorq.expr.datatypes import Int64, LargeString, String
 from xorq.tests.util import assert_frame_equal, assert_series_equal
 from xorq.vendor import ibis
-from xorq.vendor.ibis.expr.datatypes import Int64, LargeString, String
 
 
 def test_can_create_table(utf8_data):

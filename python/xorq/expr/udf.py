@@ -5,7 +5,7 @@ from typing import Any
 import pyarrow as pa
 import toolz
 
-import xorq.vendor.ibis.expr.datatypes as dt
+import xorq.expr.datatypes as dt
 import xorq.vendor.ibis.expr.rules as rlz
 import xorq.vendor.ibis.expr.types as ir
 from xorq.vendor.ibis.common.annotations import Argument

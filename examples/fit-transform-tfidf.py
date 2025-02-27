@@ -1,9 +1,9 @@
-import functools
+import pathlib
+import pickle
 
 import dask
 import pandas as pd
 import pyarrow as pa
-import requests
 import toolz
 from sklearn.feature_extraction.text import TfidfVectorizer
 
@@ -11,51 +11,20 @@ import xorq as xo
 import xorq.expr.udf as udf
 import xorq.vendor.ibis.expr.datatypes as dt
 from xorq.common.caching import ParquetCacheStorage
-from xorq.expr.udf import make_pandas_expr_udf, wrap_model
-
-
-@functools.cache
-def hackernews_stories(n=1000):
-    try:
-        return pd.read_pickle("df.pkl")
-    except Exception:
-        # Get the max ID number from hacker news
-        resp = requests.get("https://hacker-news.firebaseio.com/v0/maxitem.json")
-        resp.raise_for_status()
-        latest_item = resp.json()
-        # Get items based on story ids from the HackerNews items endpoint
-        results = []
-        scope = range(latest_item - n, latest_item)
-        for item_id in scope:
-            resp = requests.get(
-                f"https://hacker-news.firebaseio.com/v0/item/{item_id}.json"
-            )
-            resp.raise_for_status()
-            item = resp.json()
-            results.append(item)
-        # Store the results in a dataframe and filter on stories with valid titles
-        df = pd.DataFrame(results)
-        if len(df) > 0:
-            df = df[df.type == "story"]
-            df = df[~df.title.isna()]
-        df.to_pickle("df.pkl")
-    return df
+from xorq.expr.udf import make_pandas_expr_udf
 
 
 @toolz.curry
 def deferred_fit_transform_series(
-    expr, col, cls, return_type, name="predicted", model_key="model", storage=None
+    expr, col, cls, return_type, name="predicted", storage=None
 ):
     def fit(fit_df, cls=cls):
         obj = cls()
         obj.fit(fit_df[col])
         return obj
 
-    def transform(df, **kwargs):
-        (key, *rest) = tuple(kwargs)
-        if key != model_key or rest:
-            raise ValueError
-        model = kwargs[model_key]
+    @toolz.curry
+    def transform(model, df):
         return pa.array(
             model.transform(df[col]).toarray().tolist(),
             type=return_type.to_pyarrow(),
@@ -63,7 +32,7 @@ def deferred_fit_transform_series(
 
     schema = xo.schema({col: expr.schema()[col]})
     model_udaf = udf.agg.pandas_df(
-        fn=toolz.compose(wrap_model(model_key=model_key), fit),
+        fn=toolz.compose(pickle.dumps, fit),
         schema=schema,
         return_type=dt.binary,
         name="_" + dask.base.tokenize(fit).lower(),
@@ -89,25 +58,42 @@ deferred_fit_transform_tfidf = deferred_fit_transform_series(
 )
 
 
-# why is this still necessary?
-xo.vendor.ibis.formats.pyarrow._from_pyarrow_types[pa.binary_view()] = dt.binary()
+if __name__ == "__main__":
+    from xorq.common.utils.import_utils import import_path
+    from xorq.expr.relations import flight_udxf
 
+    m = import_path(
+        pathlib.Path(__file__).parent.joinpath("hacker-news-udtf-example.py")
+    )
 
-con = xo.connect()
-t = con.register(hackernews_stories(), "t")
-col = "title"
+    con = xo.connect()
+    expr = flight_udxf(
+        con.register(
+            pd.DataFrame(({"maxitem": 43182839, "n": 1000},)),
+            table_name="t",
+        ),
+        m.HackerNewsFetcher,
+    )
 
+    # # this doesn't work
+    # expr2 = expr
+    # # this works
+    con2 = xo.connect()
+    expr2 = con2.register(
+        expr.execute(),
+        table_name="t2",
+    )
 
-(computed_kwargs_expr, model_udaf, predict_expr_udf) = deferred_fit_transform_tfidf(
-    t, col
-)
-x = computed_kwargs_expr.execute()
-y = predict_expr_udf.on_expr(t).execute()
+    col = "title"
+    (computed_kwargs_expr, model_udaf, predict_expr_udf) = deferred_fit_transform_tfidf(
+        expr2, col
+    )
+    model = computed_kwargs_expr.execute()
+    y = predict_expr_udf.on_expr(expr2).execute()
 
-
-storage = ParquetCacheStorage(source=con)
-(computed_kwargs_expr, model_udaf, predict_expr_udf) = deferred_fit_transform_tfidf(
-    t, col, storage=storage
-)
-x = computed_kwargs_expr.execute()
-y = predict_expr_udf.on_expr(t).execute()
+    storage = ParquetCacheStorage(source=con2)
+    (computed_kwargs_expr, model_udaf, predict_expr_udf) = deferred_fit_transform_tfidf(
+        expr2, col, storage=storage
+    )
+    model = computed_kwargs_expr.execute()
+    y = predict_expr_udf.on_expr(expr2).execute()

@@ -106,7 +106,7 @@ def _import_jupyter_notebook(path, module_name):
     return module
 
 
-def build_command(script_path, expression, target_dir="builds"):
+def build_command(script_path, expression, builds_dir="builds"):
     """
     Generate artifacts from an expression in a given Python script
 
@@ -114,7 +114,7 @@ def build_command(script_path, expression, target_dir="builds"):
     ----------
     script_path : Path to the Python script
     expression : The name of the expression to build
-    target_dir : Directory where artifacts will be generated
+    builds_dir : Directory where artifacts will be generated
 
     Returns
     -------
@@ -133,7 +133,7 @@ def build_command(script_path, expression, target_dir="builds"):
 
     print(f"Building {expression} from {script_path}")
 
-    build_manager = BuildManager(target_dir)
+    build_manager = BuildManager(builds_dir)
 
     vars_module = import_from_path(script_path)
 
@@ -206,16 +206,22 @@ def main():
         help="Name of the expression variable in the Python script",
     )
     build_parser.add_argument(
-        "--target-dir", default="build", help="Directory for all generated artifacts"
+        "--builds-dir",
+        default="builds",
+        help="Path to the directory for all generated artifacts",
     )
 
     # Create parser for the "run" command
     run_parser = subparsers.add_parser(
         "run", help="Run a build from a builds directory"
     )
-    run_parser.add_argument("builds_dir", help="Path to the builds directory")
     run_parser.add_argument(
         "expression_hash", help="Hash identifier of the build to run"
+    )
+    run_parser.add_argument(
+        "--builds-dir",
+        default="builds",
+        help="Path to the directory for all generated artifacts",
     )
     run_parser.add_argument(
         "--format", choices=["csv", "json"], default="csv", help="Output format"
@@ -226,7 +232,7 @@ def main():
     match args.command:
         case "build":
             expressions = [args.expressions] if args.expressions else []
-            build_command(args.script_path, expressions, args.target_dir)
+            build_command(args.script_path, expressions, args.builds_dir)
         case "run":
             run_command(args.builds_dir, args.expression_hash, args.format)
 

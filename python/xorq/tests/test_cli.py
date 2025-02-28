@@ -48,7 +48,7 @@ def test_build_command_on_notebook(monkeypatch, tmp_path, capsys):
         str(script_path),
         "-e",
         "expr",
-        "--target-dir",
+        "--builds-dir",
         str(target_dir),
     ]
     monkeypatch.setattr(sys, "argv", test_args)

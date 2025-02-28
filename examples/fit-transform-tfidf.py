@@ -73,27 +73,41 @@ if __name__ == "__main__":
             table_name="t",
         ),
         m.HackerNewsFetcher,
+        name="outer",
+        inner_name="inner",
+    )
+    # we must have two streams with different names: we can't just reuse the first expr
+    expr2 = flight_udxf(
+        con.register(
+            pd.DataFrame(({"maxitem": 43182839, "n": 1000},)),
+            table_name="t",
+        ),
+        m.HackerNewsFetcher,
+        name="outer2",
+        inner_name="inner2",
     )
 
-    # # this doesn't work
-    # expr2 = expr
-    # # this works
-    con2 = xo.connect()
-    expr2 = con2.register(
-        expr.execute(),
-        table_name="t2",
-    )
+    # # alternatively, we can execute, but this is cheating
+    # con2 = xo.connect()
+    # expr2 = con2.register(
+    #     expr.execute(),
+    #     table_name="t2",
+    # )
 
     col = "title"
     (computed_kwargs_expr, model_udaf, predict_expr_udf) = deferred_fit_transform_tfidf(
-        expr2, col
+        expr, col
     )
     model = computed_kwargs_expr.execute()
-    y = predict_expr_udf.on_expr(expr2).execute()
+    # y = predict_expr_udf.on_expr(expr2).execute()
+    expr3 = predict_expr_udf.on_expr(expr2)
+    y = expr3.execute()
 
-    storage = ParquetCacheStorage(source=con2)
+    # things work fine if we cache the model
+    storage = ParquetCacheStorage(source=con)
+    # do we have an issue of having to reregister the rbr?
     (computed_kwargs_expr, model_udaf, predict_expr_udf) = deferred_fit_transform_tfidf(
-        expr2, col, storage=storage
+        expr, col, storage=storage
     )
-    model = computed_kwargs_expr.execute()
-    y = predict_expr_udf.on_expr(expr2).execute()
+    model2 = computed_kwargs_expr.execute()
+    y2 = predict_expr_udf.on_expr(expr).execute()

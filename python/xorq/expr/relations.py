@@ -319,6 +319,7 @@ def flight_udxf(
     make_server=None,
     make_connection=None,
     con=None,
+    inner_name=None,
     **kwargs,
 ):
     return (
@@ -327,7 +328,7 @@ def flight_udxf(
             udxf=udxf,
             make_server=make_server,
             make_connection=make_connection,
-            name=name,
+            name=inner_name,
             **kwargs,
         )
         .to_expr()

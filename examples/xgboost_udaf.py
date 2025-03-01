@@ -3,7 +3,7 @@ import toolz
 import xgboost as xgb
 
 import xorq as xo
-import xorq.vendor.ibis.expr.datatypes as dt
+import xorq.expr.datatypes as dt
 from xorq.expr import udf
 
 

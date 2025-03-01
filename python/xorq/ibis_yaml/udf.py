@@ -3,7 +3,7 @@ from typing import Any
 
 import cloudpickle
 
-import xorq.vendor.ibis.expr.datatypes as dt
+import xorq.expr.datatypes as dt
 import xorq.vendor.ibis.expr.operations as ops
 import xorq.vendor.ibis.expr.rules as rlz
 from xorq.ibis_yaml.common import (

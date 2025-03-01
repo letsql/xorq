@@ -8,7 +8,7 @@ import pyarrow.compute as pc
 import pyarrow_hotfix  # noqa: F401
 
 import xorq.common.exceptions as com
-import xorq.vendor.ibis.expr.datatypes as dt
+import xorq.expr.datatypes as dt
 
 
 def _extract_epoch_seconds(array) -> dt.int32:

@@ -18,8 +18,8 @@ import sqlglot.expressions as sge
 
 import xorq as xo
 import xorq.common.exceptions as com
+import xorq.expr.datatypes as dt
 import xorq.internal as df
-import xorq.vendor.ibis.expr.datatypes as dt
 import xorq.vendor.ibis.expr.operations as ops
 import xorq.vendor.ibis.expr.schema as sch
 import xorq.vendor.ibis.expr.types as ir

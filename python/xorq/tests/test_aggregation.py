@@ -7,7 +7,7 @@ from pytest import param
 
 import xorq as xo
 import xorq.common.exceptions as com
-import xorq.vendor.ibis.expr.datatypes as dt
+import xorq.expr.datatypes as dt
 from xorq.tests.util import assert_frame_equal, reduction_tolerance
 from xorq.vendor import ibis
 from xorq.vendor.ibis import _

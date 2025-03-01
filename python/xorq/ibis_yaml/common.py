@@ -4,7 +4,7 @@ from typing import Any
 
 import attr
 
-import xorq.vendor.ibis.expr.datatypes as dt
+import xorq.expr.datatypes as dt
 import xorq.vendor.ibis.expr.types as ir
 from xorq.ibis_yaml.utils import freeze
 from xorq.vendor.ibis.common.collections import FrozenOrderedDict

@@ -13,8 +13,9 @@ from sqlglot.dialects import Postgres
 from sqlglot.dialects.dialect import rename_func
 
 import xorq.common.exceptions as com
-import xorq.vendor.ibis.expr.datatypes as dt
+import xorq.expr.datatypes as dt
 import xorq.vendor.ibis.expr.operations as ops
+from xorq.expr.datatypes import LargeString
 from xorq.vendor.ibis.backends.sql.compilers.base import (
     FALSE,
     NULL,
@@ -26,7 +27,6 @@ from xorq.vendor.ibis.backends.sql.datatypes import PostgresType
 from xorq.vendor.ibis.backends.sql.rewrites import split_select_distinct_with_order_by
 from xorq.vendor.ibis.common.temporal import IntervalUnit, TimestampUnit
 from xorq.vendor.ibis.expr import types as ir
-from xorq.vendor.ibis.expr.datatypes import LargeString
 from xorq.vendor.ibis.expr.operations.udf import InputType
 
 

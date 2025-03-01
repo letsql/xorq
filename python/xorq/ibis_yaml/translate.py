@@ -6,8 +6,8 @@ import functools
 import operator
 from typing import Any
 
+import xorq.expr.datatypes as dt
 import xorq.vendor.ibis as ibis
-import xorq.vendor.ibis.expr.datatypes as dt
 import xorq.vendor.ibis.expr.operations as ops
 import xorq.vendor.ibis.expr.operations.temporal as tm
 import xorq.vendor.ibis.expr.types as ir

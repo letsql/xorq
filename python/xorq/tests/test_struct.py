@@ -8,7 +8,7 @@ import pytest
 from pytest import param
 
 import xorq as xo
-import xorq.vendor.ibis.expr.datatypes as dt
+import xorq.expr.datatypes as dt
 from xorq.tests.util import assert_frame_equal, assert_series_equal
 
 

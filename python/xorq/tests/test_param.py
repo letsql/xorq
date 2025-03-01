@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 
 import xorq as xo
-import xorq.vendor.ibis.expr.datatypes as dt
+import xorq.expr.datatypes as dt
 from xorq.tests.util import assert_series_equal, default_series_rename
 
 

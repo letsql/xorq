@@ -2,8 +2,8 @@ from datetime import date
 
 import pytest
 
+import xorq.expr.datatypes as dt
 import xorq.vendor.ibis as ibis
-import xorq.vendor.ibis.expr.datatypes as dt
 
 
 # Fixtures from: https://github.com/ibis-project/ibis-substrait/blob/main/ibis_substrait/tests/compiler/test_tpch.py

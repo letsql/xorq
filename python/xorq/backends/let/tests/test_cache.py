@@ -13,7 +13,7 @@ import pytest
 import toolz
 
 import xorq as xo
-import xorq.vendor.ibis.expr.datatypes as dt
+import xorq.expr.datatypes as dt
 from xorq.backends.conftest import (
     get_storage_uncached,
 )

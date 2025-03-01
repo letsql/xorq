@@ -170,7 +170,7 @@ def normalize_duckdb_file_read(dt):
 
 
 def normalize_letsql_databasetable(dt):
-    from xorq.expr.relations import FlightExchange
+    from xorq.expr.relations import FlightExchange, FlightUDXF
 
     if dt.source.name != "let":
         raise ValueError
@@ -180,6 +180,15 @@ def normalize_letsql_databasetable(dt):
                 "normalize_letsql_databasetable",
                 dt.input_expr.unbind(),
                 dt.unbound_expr,
+                dt.make_connection,
+            )
+        )
+    elif isinstance(dt, FlightUDXF):
+        return dask.base.normalize_token(
+            (
+                "normalize_letsql_databasetable",
+                dt.input_expr.unbind(),
+                dt.udxf.exchange_f,
                 dt.make_connection,
             )
         )

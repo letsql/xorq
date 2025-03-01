@@ -8,6 +8,7 @@ import importlib.metadata
 import itertools
 import json
 import keyword
+import os
 import re
 import sys
 import urllib.parse
@@ -17,6 +18,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, NamedTuple
 
 import dask
 import toolz
+import yaml
 from attr import (
     field,
     frozen,
@@ -25,6 +27,7 @@ from attr.validators import (
     instance_of,
     optional,
 )
+from envyaml import EnvYAML
 
 import xorq as xo
 import xorq.common.exceptions as exc
@@ -1568,9 +1571,19 @@ class Profile:
             None,
         )
 
+    def __attrs_post_init__(self):
+        # Sort kwargs_tuple after initialization
+        object.__setattr__(self, "kwargs_tuple", tuple(sorted(self.kwargs_tuple)))
+
+    @property
+    def kwargs_dict(self):
+        return {k: v for k, v in self.kwargs_tuple}
+
     @property
     def hash_name(self):
-        return dask.base.tokenize(self.as_json())
+        pre_hash = json.loads(self.as_json())
+        pre_hash.pop("idx")
+        return dask.base.tokenize(json.dumps(pre_hash))
 
     def get_con(self, **kwargs):
         kwargs = {
@@ -1604,9 +1617,47 @@ class Profile:
     def as_json(self):
         return json.dumps(self.as_dict())
 
+    def as_yaml(self):
+        return yaml.safe_dump(
+            dict(con_name=self.con_name, kwargs_dict=self.kwargs_dict, idx=self.idx)
+        )
+
+    def elide_secrets(self):
+        # TODO: Needs more secret keys for different backends
+        SECRET_KEYS = ("password", "secret")
+
+        new_kwargs = {}
+        for k, v in self.kwargs_dict.items():
+            found_env = None
+            # check to see if the value is an env variable
+            # and that it exists before we save it
+            if not v:
+                continue
+            if isinstance(v, str):
+                if v.startswith("${") and v.endswith("}"):
+                    env_name = v[2:-1]
+                    if env_name in os.environ:
+                        new_kwargs[k] = f"${{{env_name}}}"
+                        continue
+
+            for env_name, env_value in os.environ.items():
+                if env_value == v:
+                    found_env = env_name
+                    break
+            if found_env:
+                new_kwargs[k] = f"${{{found_env}}}"
+            else:
+                if k in SECRET_KEYS:
+                    new_kwargs[k] = "***elided***"
+                else:
+                    new_kwargs[k] = v
+        return self.clone(**new_kwargs)
+
     def save(self, profile_dir=None, alias=None, clobber=False):
         path = self.get_path(self.hash_name, profile_dir=profile_dir)
-        path.write_text(self.as_json())
+        if not path.exists():
+            elided = self.elide_secrets()
+            path.write_text(elided.as_yaml())
         if alias:
             alias_path = self.get_path(alias, profile_dir=profile_dir)
             if alias_path.exists():
@@ -1624,15 +1675,18 @@ class Profile:
     def get_path(cls, name, profile_dir=None):
         profile_dir = profile_dir or xo.options.profiles.profile_dir
         profile_dir.mkdir(exist_ok=True, parents=True)
-        path = profile_dir.joinpath(name).with_suffix(".json")
+        path = profile_dir.joinpath(name).with_suffix(".yaml")
         return path
 
     @classmethod
     def load(cls, name, profile_dir=None):
         path = cls.get_path(name, profile_dir=profile_dir)
-        dct = json.loads(path.read_text())
-        dct["kwargs_tuple"] = tuple(map(tuple, dct["kwargs_tuple"]))
-        return cls(**dct)
+        env = EnvYAML(path)
+        con_name = env.get("con_name")
+        kwargs_dict = env.get("kwargs_dict")
+        idx = env.get("idx")
+        sorted_kwargs = tuple(sorted(kwargs_dict.items()))
+        return cls(con_name=con_name, kwargs_tuple=sorted_kwargs, idx=idx)
 
     @classmethod
     def from_con(cls, con):
@@ -1645,4 +1699,6 @@ class Profile:
             **toolz.dissoc(arguments, "args", kwargs_name),
             **arguments.get(kwargs_name, {}),
         }
+        if "port" in kwargs and kwargs["port"] is not None:
+            kwargs["port"] = int(kwargs["port"])
         return cls(con_name=con.name, kwargs_tuple=tuple(kwargs.items()))

@@ -106,7 +106,7 @@ def _import_jupyter_notebook(path, module_name):
     return module
 
 
-def build_command(script_path, expression, target_dir="build"):
+def build_command(script_path, expression, builds_dir="builds"):
     """
     Generate artifacts from an expression in a given Python script
 
@@ -114,7 +114,7 @@ def build_command(script_path, expression, target_dir="build"):
     ----------
     script_path : Path to the Python script
     expression : The name of the expression to build
-    target_dir : Directory where artifacts will be generated
+    builds_dir : Directory where artifacts will be generated
 
     Returns
     -------
@@ -133,7 +133,7 @@ def build_command(script_path, expression, target_dir="build"):
 
     print(f"Building {expression} from {script_path}")
 
-    build_manager = BuildManager(target_dir)
+    build_manager = BuildManager(builds_dir)
 
     vars_module = import_from_path(script_path)
 
@@ -156,6 +156,36 @@ def build_command(script_path, expression, target_dir="build"):
     )
 
 
+def run_command(builds_dir, hash_id, output_format="csv"):
+    """
+    Run a build, by recreating the expression from the build
+
+    Parameters
+    ----------
+    builds_dir : Path to the builds directory
+    hash_id : Hash identifier of the build to run
+    output_format : Output format of the run (either "csv" or "json")
+
+    Returns
+    -------
+
+    """
+    try:
+        build_manager = BuildManager(builds_dir)
+        expr = build_manager.load_expr(hash_id)
+        frame = expr.execute()
+
+        match output_format:
+            case "csv":
+                frame.to_csv(sys.stdout, index=False, index_label=False)
+            case "json":
+                frame.to_json(sys.stdout, orient="records")
+
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+
+
 def main():
     """Main entry point for the xorq CLI."""
     parser = argparse.ArgumentParser(description="xorq - build and run expressions")
@@ -176,16 +206,35 @@ def main():
         help="Name of the expression variable in the Python script",
     )
     build_parser.add_argument(
-        "--target-dir", default="build", help="Directory for all generated artifacts"
+        "--builds-dir",
+        default="builds",
+        help="Path to the directory for all generated artifacts",
     )
 
-    # Parse the arguments
+    # Create parser for the "run" command
+    run_parser = subparsers.add_parser(
+        "run", help="Run a build from a builds directory"
+    )
+    run_parser.add_argument(
+        "expression_hash", help="Hash identifier of the build to run"
+    )
+    run_parser.add_argument(
+        "--builds-dir",
+        default="builds",
+        help="Path to the directory for all generated artifacts",
+    )
+    run_parser.add_argument(
+        "--format", choices=["csv", "json"], default="csv", help="Output format"
+    )
+
     args = parser.parse_args()
 
-    # Execute the appropriate command
-    if args.command == "build":
-        expressions = [args.expressions] if args.expressions else []
-        build_command(args.script_path, expressions, args.target_dir)
+    match args.command:
+        case "build":
+            expressions = [args.expressions] if args.expressions else []
+            build_command(args.script_path, expressions, args.builds_dir)
+        case "run":
+            run_command(args.builds_dir, args.expression_hash, args.format)
 
 
 if __name__ == "__main__":

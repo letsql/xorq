@@ -3,7 +3,7 @@ from xorq.common.utils.defer_utils import deferred_read_parquet
 from xorq.expr.relations import into_backend
 
 
-pg = xo.postgres.connect_examples()
+pg = xo.postgres.connect_env()
 db = xo.duckdb.connect()
 
 batting = pg.table("batting")

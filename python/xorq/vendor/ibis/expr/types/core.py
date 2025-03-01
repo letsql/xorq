@@ -556,6 +556,26 @@ class Expr(Immutable, Coercible):
     def ls(self):
         return LETSQLAccessor(self)
 
+    def build(self, builds_dir: str | Path) -> Expr:
+        """
+        Build the expression to the given directory.
+
+        Parameters
+        ----------
+        builds_dir : str or Path Directory for all generated artifacts
+
+        Returns
+        -------
+        The expression itself
+        """
+
+        from xorq.ibis_yaml.compiler import BuildManager
+
+        build_manager = BuildManager(builds_dir)
+        build_manager.compile_expr(self)
+
+        return self
+
 
 @frozen
 class LETSQLAccessor:

@@ -113,3 +113,13 @@ def make_cell_typ():
 @dask.base.normalize_token.register(make_cell_typ())
 def normalize_cell(cell):
     return dask.base.normalize_token(cell.cell_contents)
+
+
+@dask.base.normalize_token.register(toolz.functoolz.excepts)
+def normalize_excepts(f):
+    return normalize_seq_with_caller(
+        f.exc,
+        f.func,
+        # FIXME: figure out how to include handler
+        # f.handler,
+    )

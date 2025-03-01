@@ -2,14 +2,14 @@ import pytest
 
 import xorq as xo
 from xorq.backends.let import Backend
-from xorq.common.caching import (
-    ParquetCacheStorage,
+from xorq.caching import (
+    ParquetStorage,
 )
 
 
 @pytest.fixture
 def cached_two(ls_con, batting, tmp_path):
-    parquet_storage = ParquetCacheStorage(source=ls_con, path=tmp_path)
+    parquet_storage = ParquetStorage(source=ls_con, path=tmp_path)
     return (
         batting[lambda t: t.yearID > 2014]
         .cache()[lambda t: t.stint == 1]

@@ -7,8 +7,8 @@ import pytest
 
 import xorq as xo
 import xorq.common.utils.dask_normalize  # noqa: F401
-from xorq.common.caching import (
-    SnapshotStorage,
+from xorq.caching import (
+    SourceSnapshotStorage,
 )
 from xorq.common.utils.dask_normalize.dask_normalize_utils import (
     patch_normalize_token,
@@ -83,7 +83,7 @@ def test_tokenize_duckdb_expr(batting, snapshot):
 def test_pandas_snapshot_key(alltypes_df, snapshot):
     con = xo.pandas.connect()
     t = con.create_table("t", alltypes_df)
-    storage = SnapshotStorage(source=con)
+    storage = SourceSnapshotStorage(source=con)
     actual = storage.get_key(t)
     snapshot.assert_match(actual, "pandas_snapshot_key.txt")
 
@@ -91,6 +91,6 @@ def test_pandas_snapshot_key(alltypes_df, snapshot):
 def test_duckdb_snapshot_key(batting, snapshot):
     con = xo.duckdb.connect()
     t = con.register(batting.to_pyarrow(), "dashed-name")
-    storage = SnapshotStorage(source=con)
+    storage = SourceSnapshotStorage(source=con)
     actual = storage.get_key(t)
     snapshot.assert_match(actual, "duckdb_snapshot_key.txt")

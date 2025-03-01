@@ -3391,7 +3391,7 @@ class Table(Expr, _FixedTextJupyterMixin):
         - Cache locations can be configured globally through xorq.config.options
         """
 
-        from xorq.common.caching import (
+        from xorq.caching import (
             SourceStorage,
             maybe_prevent_cross_source_caching,
         )

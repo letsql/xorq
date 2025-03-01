@@ -1,7 +1,7 @@
 from collections.abc import Mapping, Sequence
 from typing import Any, Dict
 
-from xorq.common.caching import SourceStorage
+from xorq.caching import SourceStorage
 from xorq.vendor.ibis.common.collections import FrozenOrderedDict
 
 

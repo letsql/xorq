@@ -5,7 +5,7 @@ import toolz
 import xorq as xo
 import xorq.expr.relations as rel
 import xorq.vendor.ibis.expr.operations as ops
-from xorq.common.caching import SourceStorage
+from xorq.caching import SourceStorage
 from xorq.common.utils.graph_utils import (
     find_all_sources,
     walk_nodes,

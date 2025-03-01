@@ -4,7 +4,7 @@ import pytest
 
 import xorq as xo
 import xorq.backends.let
-from xorq.common.caching import ParquetCacheStorage
+from xorq.caching import ParquetStorage
 
 
 @pytest.fixture(scope="session")
@@ -20,7 +20,7 @@ def test_put_get_drop(tmp_path, parquet_dir):
     con = xo.datafusion.connect()
     t = con.read_parquet(astronauts_path, table_name="astronauts")
 
-    storage = ParquetCacheStorage(path=tmp_path, source=con)
+    storage = ParquetStorage(path=tmp_path, source=con)
     put_node = storage.put(t, t.op())
     assert put_node is not None
 
@@ -39,7 +39,7 @@ def test_default_connection(tmp_path, parquet_dir):
     t = con.read_parquet(batting_path, table_name="astronauts")
 
     # if we do cross source caching, then we get a random name and storage.get_key result isn't stable
-    storage = ParquetCacheStorage(source=con, path=tmp_path)
+    storage = ParquetStorage(source=con, path=tmp_path)
     storage.put(t, t.op())
 
     get_node = storage.get(t)

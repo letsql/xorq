@@ -1,6 +1,6 @@
 import xorq as xo
 from xorq import _
-from xorq.common.caching import SourceStorage
+from xorq.caching import SourceStorage
 
 
 con = xo.connect()

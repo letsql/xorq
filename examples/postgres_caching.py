@@ -1,6 +1,6 @@
 import xorq as xo
 from xorq import _
-from xorq.common.caching import ParquetCacheStorage
+from xorq.caching import ParquetStorage
 
 
 pg = xo.postgres.connect_examples()
@@ -10,7 +10,7 @@ for table_name in pg.list_tables():
     if table_name.startswith(xo.config.options.cache.key_prefix):
         pg.drop_table(table_name)
 
-cache = ParquetCacheStorage(source=con)
+cache = ParquetStorage(source=con)
 
 t = (
     pg.table("batting")

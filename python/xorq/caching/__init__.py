@@ -17,6 +17,7 @@ from attr import (
 from attr.validators import (
     instance_of,
 )
+from public import public
 
 import xorq as xo
 import xorq.common.utils.dask_normalize  # noqa: F401
@@ -239,7 +240,7 @@ class SnapshotStrategy(CacheStrategy):
 
 
 @frozen
-class ParquetStorage(CacheStorage):
+class _ParquetStorage(CacheStorage):
     source = field(
         validator=instance_of(ibis.backends.BaseBackend),
         factory=xorq.config._backend_init,
@@ -313,8 +314,25 @@ def chained_getattr(self, attr):
         return object.__getattribute__(self, attr)
 
 
+@public
 @frozen
-class ParquetSnapshot:
+class ParquetSnapshotStorage:
+    """Storage that caches expressions as Parquet files using a snapshot invalidation strategy.
+
+    This storage class saves intermediate results as Parquet files in a specified
+    directory and uses a snapshot-based approach for cache invalidation.
+    The snapshot strategy ensures cached data is only invalidated when the
+    expression's definition changes, making it suitable for stable datasets.
+
+    Parameters
+    ----------
+    source : ibis.backends.BaseBackend
+        The backend to use for execution. Defaults to xorq's default backend.
+    path : pathlib.Path
+        The directory where Parquet files will be stored. Defaults to
+        xorq.options.cache.default_path.
+    """
+
     source = field(
         validator=instance_of(ibis.backends.BaseBackend),
         factory=xorq.config._backend_init,
@@ -329,7 +347,7 @@ class ParquetSnapshot:
     def __attrs_post_init__(self):
         cache = Cache(
             strategy=SnapshotStrategy(),
-            storage=ParquetStorage(
+            storage=_ParquetStorage(
                 self.source,
                 self.path,
             ),
@@ -337,13 +355,42 @@ class ParquetSnapshot:
         object.__setattr__(self, "cache", cache)
 
     def exists(self, expr: ir.Expr) -> bool:
+        """Check if the expression has been cached.
+
+        Parameters
+        ----------
+        expr : ir.Expr
+            The expression to check
+
+        Returns
+        -------
+        bool
+            True if the expression is cached, False otherwise
+        """
         return self.cache.exists(expr)
 
     __getattr__ = chained_getattr
 
 
+@public
 @frozen
-class ParquetCacheStorage:
+class ParquetStorage:
+    """Storage that caches expressions as Parquet files using a modification time strategy.
+
+    This storage class saves intermediate results as Parquet files in a specified
+    directory and uses a modification time-based approach for cache invalidation.
+    The cache is invalidated when the modification time of the source data changes,
+    making it suitable for data that changes periodically.
+
+    Parameters
+    ----------
+    source : ibis.backends.BaseBackend
+        The backend to use for execution. Defaults to xorq's default backend.
+    path : pathlib.Path
+        The directory where Parquet files will be stored. Defaults to
+        xorq.options.cache.default_path.
+    """
+
     source = field(
         validator=instance_of(ibis.backends.BaseBackend),
         factory=xorq.config._backend_init,
@@ -358,7 +405,7 @@ class ParquetCacheStorage:
     def __attrs_post_init__(self):
         cache = Cache(
             strategy=ModificationTimeStragegy(),
-            storage=ParquetStorage(
+            storage=_ParquetStorage(
                 self.source,
                 self.path,
             ),
@@ -368,8 +415,22 @@ class ParquetCacheStorage:
     __getattr__ = chained_getattr
 
 
+@public
 @frozen
 class SourceStorage:
+    """Storage that caches expressions within the source backend using a modification time strategy.
+
+    This storage class materializes intermediate results as tables within the source
+    backend itself (e.g., as temporary tables in a database) and uses a modification
+    time-based approach for cache invalidation. The cache is invalidated when the
+    modification time of the source data changes.
+
+    Parameters
+    ----------
+    source : ibis.backends.BaseBackend
+        The backend to use for both execution and storage. Defaults to xorq's default backend.
+    """
+
     source = field(
         validator=instance_of(ibis.backends.BaseBackend),
         factory=xorq.config._backend_init,
@@ -385,8 +446,23 @@ class SourceStorage:
     __getattr__ = chained_getattr
 
 
+@public
 @frozen
-class SnapshotStorage:
+class SourceSnapshotStorage:
+    """Storage that caches expressions within the source backend using a snapshot strategy.
+
+    This storage class materializes intermediate results as tables within the source
+    backend itself (e.g., as temporary tables in a database) and uses a snapshot-based
+    approach for cache invalidation. The snapshot strategy ensures cached data is only
+    invalidated when the expression's definition changes, making it suitable for
+    stable datasets that are queried frequently.
+
+    Parameters
+    ----------
+    source : ibis.backends.BaseBackend
+        The backend to use for both execution and storage. Defaults to xorq's default backend.
+    """
+
     source = field(
         validator=instance_of(ibis.backends.BaseBackend),
         factory=xorq.config._backend_init,

@@ -5,7 +5,7 @@ import pyarrow as pa
 import pytest
 
 import xorq as xo
-from xorq.common.caching import ParquetCacheStorage, SourceStorage
+from xorq.caching import ParquetStorage, SourceStorage
 from xorq.expr.relations import register_and_transform_remote_tables
 from xorq.vendor import ibis
 from xorq.vendor.ibis import _
@@ -168,7 +168,7 @@ def test_into_backend_cache(pg, tmp_path):
         .cache(SourceStorage(source=con))
         .into_backend(ddb_con)
         .select(player_id="playerID", year_id="yearID_right")
-        .cache(ParquetCacheStorage(source=ddb_con, path=tmp_path))
+        .cache(ParquetStorage(source=ddb_con, path=tmp_path))
     )
 
     res = expr.execute()
@@ -250,7 +250,7 @@ def test_into_backend_duckdb_trino_cached(trino_table, tmp_path):
         trino_table.head(10_000)
         .into_backend(db_con)
         .pipe(make_merged)
-        .cache(ParquetCacheStorage(path=tmp_path))
+        .cache(ParquetStorage(path=tmp_path))
     )
     df = expr.execute()
     assert isinstance(df, pd.DataFrame)

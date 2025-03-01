@@ -9,7 +9,7 @@ import pytest
 from pytest import param
 
 import xorq as xo
-from xorq.common.caching import SourceStorage
+from xorq.caching import SourceStorage
 from xorq.tests.util import (
     assert_frame_equal,
 )
@@ -588,7 +588,7 @@ def test_execution_expr_multiple_tables(ls_con, tables, request, mocker):
     ],
 )
 def test_execution_expr_multiple_tables_cached(ls_con, tables, request):
-    from xorq.common.caching import SourceStorage
+    from xorq.caching import SourceStorage
 
     table_name = "batting"
     left, right = map(request.getfixturevalue, tables)

@@ -1,12 +1,12 @@
 from pathlib import Path
 
 import xorq as xo
-from xorq.common.caching import ParquetCacheStorage
+from xorq.caching import ParquetStorage
 
 
 pg = xo.postgres.connect_examples()
 con = xo.connect()  # empty connection
-storage = ParquetCacheStorage(
+storage = ParquetStorage(
     source=con,
     path=Path.cwd(),
 )

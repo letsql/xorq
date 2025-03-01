@@ -16,8 +16,8 @@ from attr.validators import (
 )
 
 import xorq as xo
-from xorq.common.caching import (
-    ParquetCacheStorage,
+from xorq.caching import (
+    ParquetStorage,
 )
 from xorq.common.utils.defer_utils import (
     deferred_read_csv,
@@ -114,7 +114,7 @@ def mutate_csv(path, line=None):
 def test_deferred_read_cache_key_check(con, tmp_path, pins_resource, request):
     # check that we don't invoke read when we calc key
     pins_resource = request.getfixturevalue(pins_resource)
-    storage = ParquetCacheStorage(source=xo.connect(), path=tmp_path)
+    storage = ParquetStorage(source=xo.connect(), path=tmp_path)
 
     assert pins_resource.table_name not in con.tables
     t = pins_resource.deferred_reader(con, pins_resource.path, pins_resource.table_name)
@@ -187,7 +187,7 @@ def test_deferred_read_temporary(con, pins_resource, request):
 )
 def test_cached_deferred_read(con, pins_resource, filter_, request, tmp_path):
     pins_resource = request.getfixturevalue(pins_resource)
-    storage = ParquetCacheStorage(source=xo.connect(), path=tmp_path)
+    storage = ParquetStorage(source=xo.connect(), path=tmp_path)
 
     df = pins_resource.df[filter_].reset_index(drop=True)
     t = pins_resource.deferred_reader(con, pins_resource.path, pins_resource.table_name)
@@ -247,7 +247,7 @@ def test_cached_deferred_read(con, pins_resource, filter_, request, tmp_path):
 )
 def test_cached_csv_mutate(con, iris_csv, tmp_path):
     target_path = ensure_tmp_csv(iris_csv.name, tmp_path)
-    storage = ParquetCacheStorage(source=xo.connect(), path=tmp_path)
+    storage = ParquetStorage(source=xo.connect(), path=tmp_path)
     # make sure the con is "clean"
     if iris_csv.table_name in con.tables:
         con.drop_table(iris_csv.table_name, force=True)

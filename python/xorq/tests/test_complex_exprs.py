@@ -4,9 +4,9 @@ import pytest
 import toolz
 
 import xorq as xo
-from xorq.common.caching import (
-    ParquetCacheStorage,
-    ParquetSnapshot,
+from xorq.caching import (
+    ParquetSnapshotStorage,
+    ParquetStorage,
 )
 from xorq.common.utils.defer_utils import deferred_read_parquet
 from xorq.expr.relations import into_backend
@@ -47,7 +47,7 @@ def asof_join_flight_data(con, tail, flight, airborne_only=True):
     return expr
 
 
-@pytest.mark.parametrize("cls", [ParquetSnapshot, ParquetCacheStorage])
+@pytest.mark.parametrize("cls", [ParquetSnapshotStorage, ParquetStorage])
 @pytest.mark.parametrize("cross_source_caching", [True, False])
 def test_complex_storage(cls, cross_source_caching, tmp_path):
     tail = "Tail_652_1"

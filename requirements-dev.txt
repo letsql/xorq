@@ -46,6 +46,7 @@ decorator==5.2.1
 defusedxml==0.7.1
 distlib==0.3.9
 duckdb==1.2.0
+envyaml==1.10.211231
 exceptiongroup==1.2.2 ; python_full_version < '3.11'
 executing==2.2.0
 fastjsonschema==2.21.1

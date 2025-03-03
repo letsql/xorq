@@ -137,7 +137,7 @@ class Pins(Config):
 
 
 class Profiles(Config):
-    profile_dir: pathlib.Path = pathlib.Path("~/.config/letsql/profiles").expanduser()
+    profile_dir: pathlib.Path = pathlib.Path("~/.config/xorq/profiles").expanduser()
 
 
 class Options(Config):

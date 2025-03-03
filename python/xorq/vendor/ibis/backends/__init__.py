@@ -5,8 +5,6 @@ import collections.abc
 import contextlib
 import functools
 import importlib.metadata
-import itertools
-import json
 import keyword
 import re
 import sys
@@ -15,25 +13,16 @@ import weakref
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar, NamedTuple
 
-import dask
 import toolz
-from attr import (
-    field,
-    frozen,
-)
-from attr.validators import (
-    instance_of,
-    optional,
-)
 
 import xorq as xo
 import xorq.common.exceptions as exc
 import xorq.vendor.ibis.config
 import xorq.vendor.ibis.expr.operations as ops
 import xorq.vendor.ibis.expr.types as ir
-from xorq.common.utils.inspect_utils import get_arguments
 from xorq.vendor import ibis
 from xorq.vendor.ibis import util
+from xorq.vendor.ibis.backends.profiles import Profile
 
 
 if TYPE_CHECKING:
@@ -876,10 +865,13 @@ class BaseBackend(abc.ABC, _FileIOHandler, CacheHandler):
     supports_in_memory_tables = True
 
     def __init__(self, *args, **kwargs):
-        self._con_args: tuple[Any] = args
-        self._con_kwargs: dict[str, Any] = kwargs
+        from xorq.vendor.ibis.backends.profiles import maybe_process_env_var
+
+        # we need to substitute args, kwargs here
+        self._con_args: tuple[Any] = tuple(map(maybe_process_env_var, args))
+        self._con_kwargs: dict[str, Any] = toolz.valmap(maybe_process_env_var, kwargs)
         self._can_reconnect: bool = True
-        self._profile = Profile.from_con(self)
+        self._profile = Profile.from_con(self, *args, **kwargs)
         super().__init__()
 
     @property
@@ -1517,132 +1509,3 @@ class NoUrl:
 
         """
         return self.connect(**kwargs)
-
-
-@frozen
-class Profiles:
-    profile_dir = field(validator=optional(instance_of(Path)), default=None)
-
-    def __attrs_post_init__(self):
-        if self.profile_dir is None:
-            object.__setattr__(self, "profile_dir", xo.options.profiles.profile_dir)
-        if not self.profile_dir.exists():
-            self.profile_dir.mkdir(exist_ok=True, parents=True)
-
-    def get(self, name):
-        return Profile.load(name, profile_dir=self.profile_dir)
-
-    def __getattr__(self, stem):
-        try:
-            return self.get(
-                next(el.name for el in self.profile_dir.iterdir() if el.stem == stem)
-            )
-        except Exception:
-            return object.__getattribute__(self, stem)
-
-    def __getitem__(self, stem):
-        return self.get(
-            next(el.name for el in self.profile_dir.iterdir() if el.stem == stem)
-        )
-
-    def __dir__(self):
-        return tuple(el for el in self.list() if el.isidentifier())
-
-    def list(self):
-        return tuple(el.stem for el in self.profile_dir.iterdir())
-
-    def _ipython_key_completions_(self):
-        return self.list()
-
-
-@frozen
-class Profile:
-    con_name = field(validator=instance_of(str))
-    kwargs_tuple = field(validator=instance_of(tuple))
-    idx = field(validator=instance_of(int), factory=itertools.count().__next__)
-
-    @con_name.validator
-    def validate_con_name(self, attr, value):
-        assert next(
-            (ep for ep in xo._load_entry_points() if ep.name == value),
-            None,
-        )
-
-    @property
-    def hash_name(self):
-        return dask.base.tokenize(self.as_json())
-
-    def get_con(self, **kwargs):
-        kwargs = {
-            **kwargs,
-            **dict(self.kwargs_tuple),
-        }
-        connect = getattr(xo.load_backend(self.con_name), "connect")
-        con = connect(**kwargs)
-        return con
-
-    def clone(self, idx=None, **kwargs):
-        idx = idx if idx is not None else self.idx
-        kwargs_tuple = tuple(
-            {
-                **dict(self.kwargs_tuple),
-                **kwargs,
-            }.items()
-        )
-        return type(self)(
-            con_name=self.con_name,
-            kwargs_tuple=kwargs_tuple,
-            idx=idx,
-        )
-
-    def as_dict(self):
-        return {
-            name: getattr(self, name)
-            for name in (attr.name for attr in self.__attrs_attrs__)
-        }
-
-    def as_json(self):
-        return json.dumps(self.as_dict())
-
-    def save(self, profile_dir=None, alias=None, clobber=False):
-        path = self.get_path(self.hash_name, profile_dir=profile_dir)
-        path.write_text(self.as_json())
-        if alias:
-            alias_path = self.get_path(alias, profile_dir=profile_dir)
-            if alias_path.exists():
-                if not clobber:
-                    raise ValueError
-                alias_path.unlink()
-            alias_path.symlink_to(path)
-            return alias_path
-        return path
-
-    def almost_equals(self, other):
-        return self.clone(idx=-1) == other.clone(idx=-1)
-
-    @classmethod
-    def get_path(cls, name, profile_dir=None):
-        profile_dir = profile_dir or xo.options.profiles.profile_dir
-        profile_dir.mkdir(exist_ok=True, parents=True)
-        path = profile_dir.joinpath(name).with_suffix(".json")
-        return path
-
-    @classmethod
-    def load(cls, name, profile_dir=None):
-        path = cls.get_path(name, profile_dir=profile_dir)
-        dct = json.loads(path.read_text())
-        dct["kwargs_tuple"] = tuple(map(tuple, dct["kwargs_tuple"]))
-        return cls(**dct)
-
-    @classmethod
-    def from_con(cls, con):
-        if con.name == "xorq_flight":
-            return None
-        kwargs_name = "config" if con.name == "duckdb" else "kwargs"
-        arguments = get_arguments(con.do_connect, *con._con_args, **con._con_kwargs)
-        assert not arguments.get("args")
-        kwargs = {
-            **toolz.dissoc(arguments, "args", kwargs_name),
-            **arguments.get(kwargs_name, {}),
-        }
-        return cls(con_name=con.name, kwargs_tuple=tuple(kwargs.items()))

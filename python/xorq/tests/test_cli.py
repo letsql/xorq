@@ -1,9 +1,13 @@
+import csv
+import json
+import re
 import sys
+from io import StringIO
 from pathlib import Path
 
 import pytest
 
-from xorq.cli import main
+from xorq.cli import build_command, main
 
 
 def test_build_command(monkeypatch, tmp_path, capsys):
@@ -16,7 +20,7 @@ def test_build_command(monkeypatch, tmp_path, capsys):
         str(script_path),
         "-e",
         "expr",
-        "--target-dir",
+        "--builds-dir",
         str(target_dir),
     ]
     monkeypatch.setattr(sys, "argv", test_args)
@@ -44,7 +48,7 @@ def test_build_command_on_notebook(monkeypatch, tmp_path, capsys):
         str(script_path),
         "-e",
         "expr",
-        "--target-dir",
+        "--builds-dir",
         str(target_dir),
     ]
     monkeypatch.setattr(sys, "argv", test_args)
@@ -62,6 +66,45 @@ def test_build_command_on_notebook(monkeypatch, tmp_path, capsys):
     assert target_dir.exists()
 
 
+@pytest.mark.parametrize("output_format", ["csv", "json"])
+def test_run_command(monkeypatch, tmp_path, capsys, output_format):
+    target_dir = tmp_path / "build"
+    script_path = Path(__file__).absolute().parent / "fixtures" / "pipeline.py"
+
+    build_command(str(script_path), ["expr"], builds_dir=str(target_dir))
+    capture = capsys.readouterr()
+
+    if match := re.search(f"{target_dir}/([0-9a-f]+)", str(capture.out)):
+        expression_hash = match.group(1)
+        test_args = [
+            "xorq",
+            "run",
+            expression_hash,
+            "--builds-dir",
+            str(target_dir),
+            "--format",
+            output_format,
+        ]
+        monkeypatch.setattr(sys, "argv", test_args)
+
+        try:
+            main()
+        except SystemExit:
+            pass
+
+        capture = capsys.readouterr()
+        run_capture = str(capture.out)
+
+        match output_format:
+            case "csv":
+                reader = csv.DictReader(StringIO(run_capture))
+                assert list(reader)
+            case "json":
+                assert json.loads(run_capture)
+    else:
+        raise AssertionError("No expression hash")
+
+
 def test_build_command_not_implemented(monkeypatch, capsys):
     script_path = Path(__file__).absolute().parent / "fixtures" / "pipeline.py"
 
@@ -69,7 +112,7 @@ def test_build_command_not_implemented(monkeypatch, capsys):
         "xorq",
         "build",
         str(script_path),
-        "--target-dir",
+        "--builds-dir",
         str(Path.cwd()),
     ]
     monkeypatch.setattr(sys, "argv", test_args)
@@ -104,7 +147,7 @@ def test_build_command_bad_expr_name(
         str(script_path),
         "-e",
         expression,
-        "--target-dir",
+        "--builds-dir",
         str(target_dir),
     ]
     monkeypatch.setattr(sys, "argv", test_args)

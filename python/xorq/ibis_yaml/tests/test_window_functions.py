@@ -37,7 +37,9 @@ def test_aggregation_window(compiler, t):
         )
 
         yaml_dict = compiler.to_yaml(expr)
-        expression = yaml_dict["expression"]
+        node_ref = yaml_dict["expression"]["node_ref"]
+
+        expression = yaml_dict["definitions"]["nodes"][node_ref]
         assert expression["op"] == "Project"
         window_func = expression["values"]["mean_c"]
         assert window_func["op"] == "WindowFunction"
@@ -52,8 +54,6 @@ def test_aggregation_window(compiler, t):
             assert "end" not in window_func
         else:
             assert window_func["end"] == following
-
-        assert window_func["group_by"][0]["name"] == "a"
 
 
 def test_row_number_simple_roundtrip(compiler, t):

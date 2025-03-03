@@ -120,13 +120,17 @@ class YamlExpressionTranslator:
             schema_registry=SchemaRegistry(),
             profiles=freeze(profiles or {}),
         )
+
         schema_ref = context.schema_registry._register_expr_schema(expr)
+
         expr_dict = translate_to_yaml(expr, context)
         expr_dict = freeze({**dict(expr_dict), "schema_ref": schema_ref})
 
+        context = context.finalize_definitions()
+
         return freeze(
             {
-                "definitions": {"schemas": context.schema_registry.schemas},
+                "definitions": context.definitions,
                 "expression": expr_dict,
             }
         )
@@ -140,7 +144,9 @@ class YamlExpressionTranslator:
             schema_registry=SchemaRegistry(),
             profiles=freeze(profiles or {}),
         )
+
         context = context.update_definitions(freeze(yaml_dict.get("definitions", {})))
+
         expr_dict = freeze(yaml_dict["expression"])
         return translate_from_yaml(expr_dict, freeze(context))
 

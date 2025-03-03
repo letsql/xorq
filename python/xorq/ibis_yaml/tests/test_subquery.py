@@ -21,10 +21,12 @@ def test_exists_subquery(compiler):
     filtered = t2.filter(t2.a == t1.a)
     expr = ops.ExistsSubquery(filtered).to_expr()
     yaml_dict = compiler.to_yaml(expr)
+
     expression = yaml_dict["expression"]
 
     assert expression["op"] == "ExistsSubquery"
-    assert expression["rel"]["op"] == "Filter"
+    node_ref = expression["rel"]["node_ref"]
+    assert yaml_dict["definitions"]["nodes"][node_ref]["op"] == "Filter"
 
     roundtrip_expr = compiler.from_yaml(yaml_dict)
     assert roundtrip_expr.equals(expr)

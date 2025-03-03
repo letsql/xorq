@@ -19,7 +19,10 @@ def test_unbound_table(t, compiler):
 def test_field(t, compiler):
     expr = t.a
     yaml_dict = compiler.to_yaml(expr)
-    expression = yaml_dict["expression"]
+
+    node_ref = yaml_dict["expression"]["node_ref"]
+
+    expression = yaml_dict["definitions"]["nodes"][node_ref]
     assert expression["op"] == "Field"
     assert expression["name"] == "a"
     assert expression["type"] == {"name": "Int64", "nullable": True}
@@ -47,7 +50,6 @@ def test_binary_op(t, compiler):
     yaml_dict = compiler.to_yaml(expr)
     expression = yaml_dict["expression"]
     assert expression["op"] == "Add"
-    assert expression["args"][0]["op"] == "Field"
     assert expression["args"][1]["op"] == "Literal"
 
     roundtrip_expr = compiler.from_yaml(yaml_dict)

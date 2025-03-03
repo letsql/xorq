@@ -30,6 +30,12 @@ from xorq.ibis_yaml.utils import (
 from xorq.vendor.ibis.expr.operations.relations import Namespace
 
 
+def should_register_node(node_dict):
+    if "parent" in node_dict and isinstance(node_dict["parent"], dict):
+        return True
+    return False
+
+
 @_translate_type.register(dt.Timestamp)
 def _translate_timestamp_type(dtype: dt.Timestamp) -> dict:
     base = {"name": "Timestamp", "nullable": dtype.nullable}
@@ -262,7 +268,7 @@ def _database_table_to_yaml(op: ops.DatabaseTable, context: TranslationContext) 
         }
     )
 
-    return freeze(
+    node_dict = freeze(
         {
             "op": "DatabaseTable",
             "table": op.name,
@@ -271,6 +277,14 @@ def _database_table_to_yaml(op: ops.DatabaseTable, context: TranslationContext) 
             "namespace": namespace_dict,
         }
     )
+
+    if should_register_node(node_dict) and hasattr(
+        context.schema_registry, "register_node"
+    ):
+        node_hash = context.schema_registry.register_node(node_dict)
+        return freeze({"node_ref": node_hash})
+
+    return node_dict
 
 
 @register_from_yaml_handler("DatabaseTable")
@@ -313,7 +327,6 @@ def _cached_node_to_yaml(op: CachedNode, context: any) -> dict:
             "parent": translate_to_yaml(op.parent, context),
             "source": op.source._profile.hash_name,
             "storage": translate_storage(op.storage, context),
-            "values": freeze(op.values),
         }
     )
 
@@ -399,7 +412,6 @@ def _read_to_yaml(op: Read, context: TranslationContext) -> dict:
             "schema_ref": schema_id,
             "profile": profile_hash_name,
             "read_kwargs": freeze(op.read_kwargs if op.read_kwargs else {}),
-            "values": freeze(op.values),
         }
     )
 
@@ -462,6 +474,40 @@ def _value_op_from_yaml(yaml_dict: dict, context: TranslationContext) -> ir.Expr
     method_name = yaml_dict["op"].lower()
     method = getattr(args[0], method_name)
     return method(*args[1:])
+
+
+@translate_to_yaml.register(ops.Lag)
+def _lag_to_yaml(op: ops.Lag, context: TranslationContext) -> dict:
+    result = {
+        "op": "Lag",
+        "arg": translate_to_yaml(op.arg, context),
+        "type": _translate_type(op.dtype),
+    }
+
+    if op.offset is not None:
+        result["offset"] = translate_to_yaml(op.offset, context)
+
+    if op.default is not None:
+        result["default"] = translate_to_yaml(op.default, context)
+
+    node_dict = freeze(result)
+
+    return node_dict
+
+
+@register_from_yaml_handler("Lag")
+def _lag_from_yaml(yaml_dict: dict, context: TranslationContext) -> ir.Expr:
+    arg = translate_from_yaml(yaml_dict["arg"], context)
+
+    offset = None
+    if "offset" in yaml_dict:
+        offset = translate_from_yaml(yaml_dict["offset"], context)
+
+    default = None
+    if "default" in yaml_dict:
+        default = translate_from_yaml(yaml_dict["default"], context)
+
+    return arg.lag(offset, default)
 
 
 @translate_to_yaml.register(ops.StringUnary)
@@ -556,13 +602,21 @@ def _binary_op_from_yaml(yaml_dict: dict, context: TranslationContext) -> ir.Exp
 
 @translate_to_yaml.register(ops.Filter)
 def _filter_to_yaml(op: ops.Filter, context: TranslationContext) -> dict:
-    return freeze(
+    node_dict = freeze(
         {
             "op": "Filter",
             "parent": translate_to_yaml(op.parent, context),
             "predicates": [translate_to_yaml(pred, context) for pred in op.predicates],
         }
     )
+
+    if should_register_node(node_dict) and hasattr(
+        context.schema_registry, "register_node"
+    ):
+        node_hash = context.schema_registry.register_node(node_dict)
+        return freeze({"node_ref": node_hash})
+
+    return node_dict
 
 
 @register_from_yaml_handler("Filter")
@@ -577,24 +631,31 @@ def _filter_from_yaml(yaml_dict: dict, context: TranslationContext) -> ir.Expr:
 
 @translate_to_yaml.register(ops.Project)
 def _project_to_yaml(op: ops.Project, context: TranslationContext) -> dict:
-    return freeze(
-        {
-            "op": "Project",
-            "parent": translate_to_yaml(op.parent, context),
-            "values": {
-                name: translate_to_yaml(val, context) for name, val in op.values.items()
-            },
-        }
-    )
+    node_dict = {
+        "op": "Project",
+        "parent": translate_to_yaml(op.parent, context),
+        "values": {
+            name: translate_to_yaml(val, context) for name, val in op.values.items()
+        },
+    }
+
+    if should_register_node(node_dict):
+        node_hash = context.schema_registry.register_node(freeze(node_dict))
+        return freeze({"node_ref": node_hash})
+
+    return freeze(node_dict)
 
 
 @register_from_yaml_handler("Project")
 def _project_from_yaml(yaml_dict: dict, context: TranslationContext) -> ir.Expr:
     parent = translate_from_yaml(yaml_dict["parent"], context)
+
+    values_dict = yaml_dict.get("values", {})
+
     values = {
-        name: translate_from_yaml(val, context)
-        for name, val in yaml_dict["values"].items()
+        name: translate_from_yaml(val, context) for name, val in values_dict.items()
     }
+
     projected = parent.projection(values)
     return projected
 
@@ -636,7 +697,7 @@ def _aggregate_from_yaml(yaml_dict: dict, context: TranslationContext) -> ir.Exp
 
 @translate_to_yaml.register(ops.JoinChain)
 def _join_to_yaml(op: ops.JoinChain, context: TranslationContext) -> dict:
-    result = {
+    node_dict = {
         "op": "JoinChain",
         "first": translate_to_yaml(op.first, context),
         "rest": [
@@ -650,10 +711,15 @@ def _join_to_yaml(op: ops.JoinChain, context: TranslationContext) -> dict:
             for link in op.rest
         ],
     }
-    result["values"] = {
+
+    node_dict["values"] = {
         name: translate_to_yaml(val, context) for name, val in op.values.items()
     }
-    return freeze(result)
+
+    if should_register_node(node_dict):
+        node_hash = context.schema_registry.register_node(freeze(node_dict))
+        return freeze({"node_ref": node_hash})
+    return freeze(node_dict)
 
 
 @register_from_yaml_handler("JoinChain")
@@ -803,7 +869,13 @@ def _field_to_yaml(op: ops.Field, context: TranslationContext) -> dict:
         if underlying_name != op.name:
             result["original_name"] = underlying_name
 
-    return freeze(result)
+    node_dict = freeze(result)
+
+    if hasattr(context.schema_registry, "register_node"):
+        node_hash = context.schema_registry.register_node(node_dict)
+        return freeze({"node_ref": node_hash})
+
+    return node_dict
 
 
 @register_from_yaml_handler("Field")
@@ -885,6 +957,23 @@ def _if_else_from_yaml(yaml_dict: dict, context: TranslationContext) -> ir.Expr:
     return ops.IfElse(bool_expr, true_expr, false_null_expr).to_expr()
 
 
+@translate_to_yaml.register(ops.Coalesce)
+def _coalesce_to_yaml(op: ops.Coalesce, context: TranslationContext) -> dict:
+    return freeze(
+        {
+            "op": "Coalesce",
+            "args": [translate_to_yaml(arg, context) for arg in op.arg],
+            "type": _translate_type(op.dtype),
+        }
+    )
+
+
+@register_from_yaml_handler("Coalesce")
+def _coalesce_from_yaml(yaml_dict: dict, context: TranslationContext) -> ir.Expr:
+    args = [translate_from_yaml(arg, context) for arg in yaml_dict["args"]]
+    return ibis.coalesce(*args)
+
+
 @translate_to_yaml.register(ops.CountDistinct)
 def _count_distinct_to_yaml(op: ops.CountDistinct, context: TranslationContext) -> dict:
     return freeze(
@@ -903,6 +992,11 @@ def _rank_base_to_yaml(op: ops.RankBase, context: TranslationContext) -> dict:
             "op": type(op).__name__,
         }
     )
+
+
+@register_from_yaml_handler("MinRank")
+def _min_rank_from_yaml(yaml_dict: dict, context: TranslationContext) -> ir.Expr:
+    return ibis.rank()
 
 
 @register_from_yaml_handler("RowNumber")

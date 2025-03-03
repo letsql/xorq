@@ -4,14 +4,14 @@ import xorq.vendor.ibis as ibis
 def test_filter(compiler, t):
     expr = t.filter(t.a > 0)
     yaml_dict = compiler.to_yaml(expr)
-    expression = yaml_dict["expression"]
+    node_ref = yaml_dict["expression"]["node_ref"]
 
-    # Original assertions
+    expression = yaml_dict["definitions"]["nodes"][node_ref]
+
     assert expression["op"] == "Filter"
     assert expression["predicates"][0]["op"] == "Greater"
     assert expression["parent"]["op"] == "UnboundTable"
 
-    # Roundtrip test: compile from YAML and verify equality
     roundtrip_expr = compiler.from_yaml(yaml_dict)
     assert roundtrip_expr.equals(expr)
 
@@ -19,14 +19,14 @@ def test_filter(compiler, t):
 def test_projection(compiler, t):
     expr = t.select(["a", "b"])
     yaml_dict = compiler.to_yaml(expr)
-    expression = yaml_dict["expression"]
+    node_ref = yaml_dict["expression"]["node_ref"]
 
-    # Original assertions
+    expression = yaml_dict["definitions"]["nodes"][node_ref]
+
     assert expression["op"] == "Project"
     assert expression["parent"]["op"] == "UnboundTable"
     assert set(expression["values"]) == {"a", "b"}
 
-    # Roundtrip test
     roundtrip_expr = compiler.from_yaml(yaml_dict)
     assert roundtrip_expr.equals(expr)
 
@@ -37,7 +37,8 @@ def test_aggregation(compiler, t):
     expression = yaml_dict["expression"]
 
     assert expression["op"] == "Aggregate"
-    assert expression["by"][0]["name"] == "a"
+    node_ref = expression["by"][0]["node_ref"]
+    assert yaml_dict["definitions"]["nodes"][node_ref]["name"] == "a"
     assert expression["metrics"]["avg_c"]["op"] == "Mean"
 
     # Roundtrip test

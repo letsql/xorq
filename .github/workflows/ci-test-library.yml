@@ -35,12 +35,19 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: 3.x
-
       - name: rust latest
         run: rustup update
+
+      - name: cargo cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            ./target/
+          key: cargo-cache-${{ matrix.python-version }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}
 
       # check how to use virtual environment https://stackoverflow.com/q/74668349/4001592
       - name: create virtual environment
@@ -54,7 +61,7 @@ jobs:
       - name: develop
         run: |
           source .venv/bin/activate
-          python -m maturin develop
+          python -m maturin develop --release --strip
 
       - name: test
         run: |

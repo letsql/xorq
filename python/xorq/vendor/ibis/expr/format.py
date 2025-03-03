@@ -173,21 +173,7 @@ def pretty(node: Node, scope: Optional[dict[str, Node]] = None) -> str:
     if not isinstance(node, Node):
         raise TypeError(f"Expected a graph node, got {type(node)}")
 
-    refs = {}
-    refcnt = itertools.count()
-    variables = {v.op(): k for k, v in (scope or {}).items()}
-
-    def mapper(op, _, **kwargs):
-        result = fmt(op, **kwargs)
-        if var := variables.get(op):
-            refs[op] = result
-            result = var
-        elif isinstance(op, ops.Relation) and not isinstance(op, ops.JoinReference):
-            refs[op] = result
-            result = f"r{next(refcnt)}"
-        return Rendered(result)
-
-    results = node.map(mapper)
+    refs, results = _pretty_by_node(node, scope)
 
     out = []
     for ref, rendered in refs.items():
@@ -203,6 +189,38 @@ def pretty(node: Node, scope: Optional[dict[str, Node]] = None) -> str:
         out.append(res)
 
     return "\n\n".join(out)
+
+
+def _pretty_by_node(node, scope, ref_cnt=itertools.count(), refs=None):
+    from xorq.expr.relations import RemoteTable
+
+    if refs is None:
+        refs = {}
+
+    variables = {v.op(): k for k, v in (scope or {}).items()}
+
+    results = {}
+
+    def mapper(op, _, **kwargs):
+        if isinstance(op, RemoteTable):
+            node = op.remote_expr.op()
+            _refs, _results = _pretty_by_node(node, scope, ref_cnt=ref_cnt, refs=refs)
+            results.update(_results)
+            refs.update(_refs)
+            result = _results.get(node)
+            return Rendered(result)
+        else:
+            result = fmt(op, **kwargs)
+            if var := variables.get(op):
+                refs[op] = result
+                result = var
+            elif isinstance(op, ops.Relation) and not isinstance(op, ops.JoinReference):
+                refs[op] = result
+                result = f"r{next(ref_cnt)}"
+            return Rendered(result)
+
+    results.update(node.map(mapper))
+    return refs, results
 
 
 @functools.singledispatch
